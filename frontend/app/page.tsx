@@ -1,7 +1,7 @@
 "use client";
-
-import { Main } from "next/document";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+
 
 export default function Home() {
   const [data, setData] = useState<string>("");
@@ -14,8 +14,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <h1>isis clasista</h1>
+    <main>
     </main>
   );
 }
