@@ -1,5 +1,6 @@
 "use client";
 
+import { Main } from "next/document";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -28,9 +29,9 @@ export default function Home() {
         <p className="text-2xl font-bold text-center">Proyecto de Programación II</p>
         <ul className="mt-4" >
           <li>Ismael Alejandro Contreras Barrón</li>
-          <li>Ruben Tolentino</li>
-          <li>Isis Celic Muñoz Cortez</li>
-          <li>Dante David Hernández Rodríguez</li>
+          <li>Ruben</li>
+          <li>Isis Muñoz</li>
+          <li>Dante</li>
         </ul>
       </div>
 
