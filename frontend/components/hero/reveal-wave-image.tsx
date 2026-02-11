@@ -175,12 +175,9 @@ function ImagePlane({
     );
 
     const scale = useMemo<[number, number, number]>(() => {
-        // Canvas clip-space is square (-1..1)
         if (aspectRatio > 1) {
-            // Image is wider than tall
             return [aspectRatio, 1, 1];
         } else {
-            // Image is taller than wide
             return [1, 1 / aspectRatio, 1];
         }
     }, [aspectRatio]);
@@ -236,10 +233,10 @@ export const RevealWaveImage = ({
     src,
     revealRadius = 0.2,
     revealSoftness = 0.5,
-    pixelSize = 3,
-    waveSpeed = 0.5,
-    waveFrequency = 3.0,
-    waveAmplitude = 0.2,
+    pixelSize = 2,
+    waveSpeed = 0.2,
+    waveFrequency = 1.0,
+    waveAmplitude = 0.1,
     mouseRadius = 0.2,
     className = "h-full w-full",
 }: RevealWaveImageProps) => {

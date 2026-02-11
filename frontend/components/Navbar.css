@@ -10,14 +10,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem .8rem;
   background-color: white;
   border-radius: 9999px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   width: 100%;
   max-width: 48rem;
   position: relative;
   z-index: 10;
+}
+
+.nav-item-container:hover {
+  background-color: #f3f4f6;
 }
 
 .logo-container {
@@ -27,8 +30,8 @@
 
 .logo-icon {
   width: auto;
-  height: 3rem;
-  margin-right: 1.5rem;
+  height: 2.5rem;
+  /* Slightly smaller for better balance */
   display: flex;
   align-items: center;
 }
@@ -37,9 +40,14 @@
   height: 100%;
   width: auto;
   object-fit: contain;
+  display: block;
 }
 
 .desktop-nav {
+  display: none;
+}
+
+.desktop-auth {
   display: none;
 }
 
@@ -47,7 +55,15 @@
   .desktop-nav {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .desktop-auth {
+    display: flex;
+    align-items: center;
   }
 }
 
@@ -57,6 +73,9 @@
   font-weight: 500;
   text-decoration: none;
   transition: color 150ms;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-link:hover {

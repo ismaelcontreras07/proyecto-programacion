@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Filter, Calendar as CalendarIcon } from "lucide-react";
 import EventCard, { EventData } from "./EventCard";
 import "./event-section.css";
+import SplitText from "../ui/SplitText"
 
 // Mock Data
 const MOCK_EVENTS: EventData[] = [
@@ -126,7 +127,17 @@ export default function EventSection() {
     return (
         <section className="event-section">
             <div className="section-header">
-                <h2 className="section-title">Próximos Eventos</h2>
+                <SplitText
+                    key={"Próximos Eventos"}
+                    text="Próximos Eventos"
+                    className="section-title"
+                    tag="h2"
+                    delay={50}
+                    duration={1}
+                    splitType="words"
+
+                    threshold={0.1}
+                />
 
                 <div className="section-filters">
                     <div className="filter-group">

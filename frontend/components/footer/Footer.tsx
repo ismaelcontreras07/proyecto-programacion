@@ -3,7 +3,6 @@ import "./footer.css";
 
 interface FooterProps {
     logo: React.ReactNode
-    brandName: string
     socialLinks: Array<{
         icon: React.ReactNode
         href: string
@@ -25,7 +24,6 @@ interface FooterProps {
 
 export function Footer({
     logo,
-    brandName,
     socialLinks,
     mainLinks,
     legalLinks,
@@ -38,10 +36,9 @@ export function Footer({
                     <a
                         href="/"
                         className="footer-brand"
-                        aria-label={brandName}
+                        aria-label="Universidad UNIMEX"
                     >
                         {logo}
-                        <span className="footer-brand-name">{brandName}</span>
                     </a>
                     <ul className="footer-social-list">
                         {socialLinks.map((link, i) => (

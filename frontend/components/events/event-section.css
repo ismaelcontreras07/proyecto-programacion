@@ -13,6 +13,9 @@
     margin-bottom: 3rem;
     align-items: center;
     text-align: center;
+    background-color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
 }
 
 @media (min-width: 768px) {
@@ -27,17 +30,10 @@
 .section-title {
     font-size: 2.25rem;
     font-weight: 800;
-    color: #18181b;
+    color: var(--azul-unimex);
     /* zinc-900 */
     letter-spacing: -0.025em;
     margin: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-    .section-title {
-        color: #f4f4f5;
-        /* zinc-100 */
-    }
 }
 
 .section-filters {
@@ -52,16 +48,8 @@
     align-items: center;
     gap: 0.5rem;
     background-color: #f4f4f5;
-    /* zinc-100 */
     padding: 0.25rem 0.5rem;
-    border-radius: 0.5rem;
-}
-
-@media (prefers-color-scheme: dark) {
-    .filter-group {
-        background-color: #27272a;
-        /* zinc-800 */
-    }
+    border-radius: var(--border-radius);
 }
 
 .filter-select {
@@ -75,11 +63,9 @@
     cursor: pointer;
 }
 
-@media (prefers-color-scheme: dark) {
-    .filter-select {
-        color: #d4d4d8;
-        /* zinc-300 */
-    }
+.filter-select:hover {
+    color: #d4d4d8;
+    /* zinc-300 */
 }
 
 .events-grid {

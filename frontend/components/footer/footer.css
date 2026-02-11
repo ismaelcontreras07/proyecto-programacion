@@ -1,24 +1,12 @@
 .footer {
-    background-color: #f4f4f5;
-    /* zinc-100 */
+    background-color: #fff;
     padding-top: 4rem;
     padding-bottom: 2rem;
-    border-top: 1px solid #e4e4e7;
-    /* zinc-200 */
-}
-
-@media (prefers-color-scheme: dark) {
-    .footer {
-        background-color: #18181b;
-        /* zinc-900 */
-        border-top-color: #27272a;
-        /* zinc-800 */
-    }
+    border-top: 1px solid var(--border);
 }
 
 .footer-container {
     max-width: 1280px;
-    /* max-w-7xl */
     margin: 0 auto;
     padding-left: 1rem;
     padding-right: 1rem;
@@ -49,14 +37,7 @@
     align-items: center;
     gap: 0.5rem;
     text-decoration: none;
-    color: #18181b;
-    /* zinc-900 */
-}
-
-@media (prefers-color-scheme: dark) {
-    .footer-brand {
-        color: white;
-    }
+    color: var(--azul-unimex);
 }
 
 .footer-brand-name {
@@ -87,53 +68,23 @@
     border-radius: 9999px;
     background-color: white;
     color: #52525b;
-    /* zinc-600 */
-    border: 1px solid #e4e4e7;
-    /* zinc-200 */
+    border: 1px solid var(--border);
     transition: background-color 0.2s, color 0.2s;
 }
 
-@media (prefers-color-scheme: dark) {
-    .social-btn {
-        background-color: #27272a;
-        /* zinc-800 */
-        color: #a1a1aa;
-        /* zinc-400 */
-        border-color: #3f3f46;
-        /* zinc-700 */
-    }
-}
 
 .social-btn:hover {
-    background-color: #f4f4f5;
-    /* zinc-100 */
-    color: #18181b;
-    /* zinc-900 */
-}
-
-@media (prefers-color-scheme: dark) {
-    .social-btn:hover {
-        background-color: #3f3f46;
-        /* zinc-700 */
-        color: white;
-    }
+    background-color: var(--bg);
+    color: var(--azul-unimex);
 }
 
 .footer-grid {
     margin-top: 1.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid #e4e4e7;
-    /* zinc-200 */
+    border-top: 1px solid var(--border);
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
-}
-
-@media (prefers-color-scheme: dark) {
-    .footer-grid {
-        border-top-color: #27272a;
-        /* zinc-800 */
-    }
 }
 
 @media (min-width: 1024px) {
@@ -197,11 +148,6 @@
     /* zinc-900 */
 }
 
-@media (prefers-color-scheme: dark) {
-    .footer-link:hover {
-        color: white;
-    }
-}
 
 .copyright {
     margin-top: 1.5rem;

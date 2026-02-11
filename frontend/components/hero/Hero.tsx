@@ -2,21 +2,20 @@
 
 import { usePathname } from "next/navigation"
 import { RevealWaveImage } from "./reveal-wave-image"
-import HeroText from "./hero-text"
+import SplitText from "../ui/SplitText"
 import "./hero.css"
 
 export default function Hero() {
     const pathname = usePathname()
 
-    // Determine text based on current path
     const getHeroText = () => {
         switch (pathname) {
             case "/":
-                return "INICIO"
+                return "Unimex"
             case "/contacto":
-                return "CONTACTO"
+                return "Contacto"
             case "/privacidad":
-                return "PRIVACIDAD"
+                return "Privacidad"
             case "/admin":
                 return "ADMIN"
             case "/dashboard":
@@ -24,7 +23,6 @@ export default function Hero() {
             case "/login":
                 return "LOGIN"
             default:
-                // For other routes, maybe return the path segment or a default
                 if (pathname?.startsWith("/admin")) return "ADMIN"
                 return "LLEVAME"
         }
@@ -43,10 +41,17 @@ export default function Hero() {
                 />
             </div>
             <div className="hero-overlay">
-                {/* HeroText wrapper to position it */}
-                <HeroText
+                <SplitText
+                    key={text}
                     text={text}
                     className="hero-text-content"
+                    tag="h1"
+                    delay={50}
+                    duration={1}
+                    splitType="chars"
+                    from={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+                    to={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                    threshold={0.1}
                 />
             </div>
         </div>

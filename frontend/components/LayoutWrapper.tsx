@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Hero from "./hero/Hero";
 import { Footer } from "./footer/Footer";
-import { Facebook, Twitter, Instagram } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -20,25 +20,20 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
             <Hero />
             {children}
             <Footer
-                logo={<img src="/logo-unimex.png" alt="Unimex Logo" style={{ height: '32px', width: 'auto' }} />}
-                brandName="UNIMEX"
+                logo={<img src="/logo-unimex-horizontal.png" alt="Unimex Logo" style={{ height: '70px', width: 'auto' }} />}
                 socialLinks={[
-                    { icon: <Facebook size={20} />, href: "#", label: "Facebook" },
-                    { icon: <Twitter size={20} />, href: "#", label: "Twitter" },
-                    { icon: <Instagram size={20} />, href: "#", label: "Instagram" },
+                    { icon: <Facebook size={20} />, href: "https://www.facebook.com/unimex", label: "Facebook" },
+                    { icon: <Instagram size={20} />, href: "https://www.instagram.com/unimexicana", label: "Instagram" },
                 ]}
                 mainLinks={[
                     { href: "/", label: "Inicio" },
                     { href: "/contacto", label: "Contacto" },
-                    { href: "/admin", label: "Admin" },
-                    { href: "/dashboard", label: "Dashboard" },
                 ]}
                 legalLinks={[
                     { href: "/privacidad", label: "Privacidad" },
-                    { href: "/terminos", label: "Términos y Condiciones" },
                 ]}
                 copyright={{
-                    text: "© 2024 UNIMEX Inc. Todos los derechos reservados."
+                    text: "© 2026 UNIMEX. Todos los derechos reservados."
                 }}
             />
         </>

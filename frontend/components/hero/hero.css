@@ -14,12 +14,17 @@
 .hero-image {
     height: 100%;
     width: 100%;
-    object-fit: contain;
+    object-fit: cover;
 }
 
 .hero-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
-    inset: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 10;
     pointer-events: none;
 }
@@ -28,4 +33,17 @@
     background-color: transparent;
     pointer-events: none;
     height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(4.2rem, 9vw, 8rem);
+    font-weight: 900;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.hero-text-content .split-char {
+    display: inline-block;
 }
