@@ -7,15 +7,103 @@ import "./event-section.css";
 const MOCK_EVENTS: EventData[] = [
     {
         id: "1",
-        image: "",
-        name: "",
-        date: "",
-        time: "",
-        place: "",
-        location: "",
+        image: "/photos/photo1.jpg",
+        name: "Taller exprés de liderazgo y trabajo en equipo",
+        date: "06/05/2026 ",
+        time: "9:00 a.m.-1:00 p.m.",
+        place: "Plaza Universidad",
+        location: "Universidad 1000, Col. Santa Cruz Atoyac, Benito Juárez, CDMX",
         spots: 1500,
-        type: "XD"
-    }
+        type: "Presencial"
+    },
+    {
+        id: "2",
+        image: "/photos/photo2.jpg",
+        name: "Simulación de exportación/importanción de un producto",
+        date: "06/05/2026",
+        time: "10:00 a.m.-1:00 p.m.",
+        place: "Forum Buenavista",
+        location: "Av. Insurgentes Norte 259, Col. Buenavista, Cuauhtémoc, CDMX",
+        spots: 1500,
+        type: "Presencial"
+    },
+    {
+        id: "3",
+        image: "/photos/photo3.jpg",
+        name: "Cabina de radio o podcast en vivo",
+        date: "11/04/2026",
+        time: "4:00 p.m.-7:00 p.m.",
+        place: "Alameda Central",
+        location: "Av. Juárez s/n, Centro Histórico, Cuauhtémoc, CDMX",
+        spots: 1500,
+        type: "Presencial"
+    },
+    {
+        id: "4",
+        image: "/photos/photo4.jpg",
+        name: "Escena del crimen simulada para análisis",
+        date: "04/13/2026",
+        time: "10:00 a.m.-3:00 p.m",
+        place: "Explanada del Monumento a la Revolución",
+        location: "Plaza de la República s/n, Tabacalera, Cuauhtémoc, CDMX",
+        spots: 1500,
+        type: "Presencial"
+    },
+    {
+        id: "5",
+        image: "/photos/photo5.jpg",
+        name: "Demostración de apps o videojuegos",
+        date: "04/22/2026",
+        time: "3:00 p.m.-7:00 p.m",
+        place: "Plaza Antara",
+        location: "Av. Ejército Nacional 843-B, Col. Granada, Miguel Hidalgo, CDMX",
+        spots: 1500,
+        type: "Presencial"
+    },
+    {
+        id: "6",
+        image: "/photos/photo6.jpg",
+        name: "Taller de inteligencia emocional",
+        date: "04/19/2026",
+        time: "9:00 a.m.-1:00 p.m",
+        place: "Parque Hundido",
+        location: "Av. Insurgentes Sur s/n, Col. Extremadura Insurgentes, Benito Juárez, CDMX",
+        spots: 1500,
+        type: "Presencial"
+    },
+    {
+        id: "7",
+        image: "/photos/photo7.jpg",
+        name: "Atención al cliente en escenarios reales",
+        date: "04/23/2026",
+        time: "10:00 a.m.-4:00 p.m",
+        place: "Embarcadero Natitivas",
+        location: "Calle del Mercado 133, Col. Xochimilco, CDMX",
+        spots: 1500,
+        type: "Presencial"
+    },
+    {
+        id: "8",
+        image: "/photos/photo8.jpg",
+        name: "Retos de pronunciación o vocabulario",
+        date: "10/17/2026",
+        time: "11:00 a.m.- 1:00 p.m.",
+        place: "Plaza Hidalgo, Coyoacán",
+        location: "Plaza Hidalgo s/n, Col. Centro, Coyoacán, CDMX",
+        spots: 1500,
+        type: "Presencial"
+    },
+    {
+        id: "9",
+        image: "/photos/photo9.jpg",
+        name: "Retos de lógica y algoritmos",
+        date: "06/05/2026",
+        time: "3:00 p.m.-7:00 p.m.",
+        place: "Biblioteca Vasconcelos",
+        location: "Eje 1 Norte Mosqueta s/n, Col. Buenavista, Alcaldía Cuauhtémoc, CDMX",
+        spots: 1500,
+        type: "Presencial"
+    },
 ];
 
 export default function EventSection() {

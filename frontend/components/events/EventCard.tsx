@@ -11,7 +11,7 @@ export interface EventData {
     place: string;
     location: string;
     spots: number;
-    type: "XD";
+    type: "Presencial"|"En línea";
 }
 
 interface EventCardProps {
