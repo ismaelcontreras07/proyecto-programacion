@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 
+import EventSection from "../components/events/EventSection";
+
 export default function Home() {
   const [data, setData] = useState<string>("");
 
@@ -15,6 +17,7 @@ export default function Home() {
 
   return (
     <main>
+      <EventSection />
     </main>
   );
 }

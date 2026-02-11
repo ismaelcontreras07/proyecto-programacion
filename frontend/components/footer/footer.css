@@ -1,0 +1,221 @@
+.footer {
+    background-color: #f4f4f5;
+    /* zinc-100 */
+    padding-top: 4rem;
+    padding-bottom: 2rem;
+    border-top: 1px solid #e4e4e7;
+    /* zinc-200 */
+}
+
+@media (prefers-color-scheme: dark) {
+    .footer {
+        background-color: #18181b;
+        /* zinc-900 */
+        border-top-color: #27272a;
+        /* zinc-800 */
+    }
+}
+
+.footer-container {
+    max-width: 1280px;
+    /* max-w-7xl */
+    margin: 0 auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@media (min-width: 1024px) {
+    .footer-container {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+.footer-top {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .footer-top {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: #18181b;
+    /* zinc-900 */
+}
+
+@media (prefers-color-scheme: dark) {
+    .footer-brand {
+        color: white;
+    }
+}
+
+.footer-brand-name {
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.footer-social-list {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin-top: 1.5rem;
+    gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .footer-social-list {
+        margin-top: 0;
+    }
+}
+
+.social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    background-color: white;
+    color: #52525b;
+    /* zinc-600 */
+    border: 1px solid #e4e4e7;
+    /* zinc-200 */
+    transition: background-color 0.2s, color 0.2s;
+}
+
+@media (prefers-color-scheme: dark) {
+    .social-btn {
+        background-color: #27272a;
+        /* zinc-800 */
+        color: #a1a1aa;
+        /* zinc-400 */
+        border-color: #3f3f46;
+        /* zinc-700 */
+    }
+}
+
+.social-btn:hover {
+    background-color: #f4f4f5;
+    /* zinc-100 */
+    color: #18181b;
+    /* zinc-900 */
+}
+
+@media (prefers-color-scheme: dark) {
+    .social-btn:hover {
+        background-color: #3f3f46;
+        /* zinc-700 */
+        color: white;
+    }
+}
+
+.footer-grid {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e4e4e7;
+    /* zinc-200 */
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    .footer-grid {
+        border-top-color: #27272a;
+        /* zinc-800 */
+    }
+}
+
+@media (min-width: 1024px) {
+    .footer-grid {
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+        margin-top: 2rem;
+        padding-top: 2rem;
+    }
+}
+
+.footer-nav {
+    grid-column: span 1;
+}
+
+@media (min-width: 1024px) {
+    .footer-nav {
+        grid-column: 4 / span 7;
+        margin-top: 0;
+    }
+}
+
+.footer-links-list {
+    list-style: none;
+    padding: 0;
+    margin: -0.25rem -0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 1024px) {
+    .footer-links-list {
+        justify-content: flex-end;
+    }
+}
+
+.footer-link-item {
+    margin: 0.25rem 0.5rem;
+    flex-shrink: 0;
+}
+
+.footer-link {
+    font-size: 0.875rem;
+    color: #52525b;
+    /* zinc-600 */
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+@media (prefers-color-scheme: dark) {
+    .footer-link {
+        color: #a1a1aa;
+        /* zinc-400 */
+    }
+}
+
+.footer-link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    color: #18181b;
+    /* zinc-900 */
+}
+
+@media (prefers-color-scheme: dark) {
+    .footer-link:hover {
+        color: white;
+    }
+}
+
+.copyright {
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+    color: #71717a;
+    /* zinc-500 */
+    white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+    .copyright {
+        margin-top: 0;
+        grid-column: 1 / span 3;
+        grid-row: 1 / span 2;
+    }
+}

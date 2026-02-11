@@ -3,55 +3,85 @@
 import * as React from "react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, LogIn, LogOut } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
+import "./Navbar.css"
+import Link from "next/link"
 
 const Navbar1 = () => {
     const [isOpen, setIsOpen] = useState(false)
+    const { user, logout, isAuthenticated } = useAuth()
 
     const toggleMenu = () => setIsOpen(!isOpen)
 
+    const baseLinks = [
+        { name: "Inicio", href: "/" },
+        { name: "Contacto", href: "/contacto" },
+        { name: "Privacidad", href: "/privacidad" },
+    ]
+
+    const adminLinks = [
+        { name: "Admin", href: "/admin" },
+        { name: "Dashboard", href: "/dashboard" },
+    ]
+
+    const links = user?.role === "admin" ? [...baseLinks, ...adminLinks] : baseLinks
+
     return (
-        <div className="flex justify-center w-full py-6 px-4">
-            <div className="flex items-center justify-between px-6 py-3 bg-white rounded-full shadow-lg w-full max-w-3xl relative z-10">
-                <div className="flex items-center">
+        <div className="navbar-container">
+            <div className="navbar-pill">
+                <div className="logo-container">
                     <motion.div
-                        className="w-8 h-8 mr-6"
+                        className="logo-icon"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                         whileHover={{ rotate: 10 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="16" cy="16" r="16" fill="url(#paint0_linear)" />
-                            <defs>
-                                <linearGradient id="paint0_linear" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                                    <stop stopColor="#FF9966" />
-                                    <stop offset="1" stopColor="#FF5E62" />
-                                </linearGradient>
-                            </defs>
-                        </svg>
+                        <img src="/logo-unimex.png" alt="Unimex Logo" className="logo-image" />
                     </motion.div>
                 </div>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden md:flex items-center space-x-8">
-                    {["Inicio", "Contacto", "Privacidad"].map((item) => (
+                <nav className="desktop-nav">
+                    {links.map((item) => (
                         <motion.div
-                            key={item}
+                            key={item.name}
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3 }}
                             whileHover={{ scale: 1.05 }}
                         >
-                            <a href="#" className="text-sm text-gray-900 hover:text-gray-600 transition-colors font-medium">
-                                {item}
-                            </a>
+                            <Link href={item.href} className="nav-link">
+                                {item.name}
+                            </Link>
                         </motion.div>
                     ))}
+
+                    {isAuthenticated ? (
+                        <motion.button
+                            onClick={logout}
+                            className="nav-link flex items-center gap-2 text-red-500 hover:text-red-700"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <LogOut size={18} />
+                            <span>Salir</span>
+                        </motion.button>
+                    ) : (
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                        >
+                            <Link href="/login" className="nav-link flex items-center gap-2 text-blue-600 hover:text-blue-800">
+                                <LogIn size={18} />
+                                <span>Ingresar</span>
+                            </Link>
+                        </motion.div>
+                    )}
                 </nav>
                 {/* Mobile Menu Button */}
-                <motion.button className="md:hidden flex items-center" onClick={toggleMenu} whileTap={{ scale: 0.9 }}>
-                    <Menu className="h-6 w-6 text-gray-900" />
+                <motion.button className="mobile-menu-btn" onClick={toggleMenu} whileTap={{ scale: 0.9 }}>
+                    <Menu className="menu-icon" />
                 </motion.button>
             </div>
 
@@ -59,36 +89,60 @@ const Navbar1 = () => {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        className="fixed inset-0 bg-white z-50 pt-24 px-6 md:hidden"
+                        className="mobile-overlay"
                         initial={{ opacity: 0, x: "100%" }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     >
                         <motion.button
-                            className="absolute top-6 right-6 p-2"
+                            className="close-btn"
                             onClick={toggleMenu}
                             whileTap={{ scale: 0.9 }}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.2 }}
                         >
-                            <X className="h-6 w-6 text-gray-900" />
+                            <X className="menu-icon" />
                         </motion.button>
-                        <div className="flex flex-col space-y-6">
-                            {["Inicio", "Contacto", "Privacidad"].map((item, i) => (
+                        <div className="mobile-links">
+                            {links.map((item, i) => (
                                 <motion.div
-                                    key={item}
+                                    key={item.name}
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: i * 0.1 + 0.1 }}
                                     exit={{ opacity: 0, x: 20 }}
                                 >
-                                    <a href="#" className="text-base text-gray-900 font-medium" onClick={toggleMenu}>
-                                        {item}
-                                    </a>
+                                    <Link href={item.href} className="mobile-link" onClick={toggleMenu}>
+                                        {item.name}
+                                    </Link>
                                 </motion.div>
                             ))}
+                            {isAuthenticated ? (
+                                <motion.button
+                                    onClick={() => {
+                                        logout();
+                                        toggleMenu();
+                                    }}
+                                    className="mobile-link flex items-center gap-2 text-red-500"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: links.length * 0.1 + 0.1 }}
+                                >
+                                    <LogOut size={20} />
+                                    <span>Cerrar Sesión</span>
+                                </motion.button>
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    className="mobile-link flex items-center gap-2 text-blue-600"
+                                    onClick={toggleMenu}
+                                >
+                                    <LogIn size={20} />
+                                    <span>Iniciar Sesión</span>
+                                </Link>
+                            )}
                         </div>
                     </motion.div>
                 )}
