@@ -8,7 +8,7 @@ import SplitText from "../ui/SplitText"
 const MOCK_EVENTS: EventData[] = [
     {
         id: "1",
-        image: "/photos/photo1.jpg",
+        image: "/Photos/photo1.jpg",
         name: "Taller exprés de liderazgo y trabajo en equipo",
         date: "06/05/2026 ",
         time: "9:00 a.m.-1:00 p.m.",
@@ -19,29 +19,29 @@ const MOCK_EVENTS: EventData[] = [
     },
     {
         id: "2",
-        image: "/photos/photo2.jpg",
+        image: "/Photos/photo2.jpg",
         name: "Simulación de exportación/importanción de un producto",
         date: "06/05/2026",
         time: "10:00 a.m.-1:00 p.m.",
         place: "Forum Buenavista",
         location: "Av. Insurgentes Norte 259, Col. Buenavista, Cuauhtémoc, CDMX",
         spots: 1500,
-        type: "Presencial"
+        type: "En línea"
     },
     {
         id: "3",
-        image: "/photos/photo3.jpg",
+        image: "/Photos/photo3.jpg",
         name: "Cabina de radio o podcast en vivo",
         date: "11/04/2026",
         time: "4:00 p.m.-7:00 p.m.",
         place: "Alameda Central",
         location: "Av. Juárez s/n, Centro Histórico, Cuauhtémoc, CDMX",
         spots: 1500,
-        type: "Presencial"
+        type: "En línea"
     },
     {
         id: "4",
-        image: "/photos/photo4.jpg",
+        image: "/Photos/photo4.jpg",
         name: "Escena del crimen simulada para análisis",
         date: "04/13/2026",
         time: "10:00 a.m.-3:00 p.m",
@@ -52,7 +52,7 @@ const MOCK_EVENTS: EventData[] = [
     },
     {
         id: "5",
-        image: "/photos/photo5.jpg",
+        image: "/Photos/photo5.jpg",
         name: "Demostración de apps o videojuegos",
         date: "04/22/2026",
         time: "3:00 p.m.-7:00 p.m",
@@ -63,7 +63,7 @@ const MOCK_EVENTS: EventData[] = [
     },
     {
         id: "6",
-        image: "/photos/photo6.jpg",
+        image: "/Photos/photo6.jpg",
         name: "Taller de inteligencia emocional",
         date: "04/19/2026",
         time: "9:00 a.m.-1:00 p.m",
@@ -74,7 +74,7 @@ const MOCK_EVENTS: EventData[] = [
     },
     {
         id: "7",
-        image: "/photos/photo7.jpg",
+        image: "/Photos/photo7.jpg",
         name: "Atención al cliente en escenarios reales",
         date: "04/23/2026",
         time: "10:00 a.m.-4:00 p.m",
@@ -85,18 +85,18 @@ const MOCK_EVENTS: EventData[] = [
     },
     {
         id: "8",
-        image: "/photos/photo8.jpg",
+        image: "/Photos/photo8.jpg",
         name: "Retos de pronunciación o vocabulario",
         date: "10/17/2026",
         time: "11:00 a.m.- 1:00 p.m.",
         place: "Plaza Hidalgo, Coyoacán",
         location: "Plaza Hidalgo s/n, Col. Centro, Coyoacán, CDMX",
         spots: 1500,
-        type: "Presencial"
+        type: "En línea"
     },
     {
         id: "9",
-        image: "/photos/photo9.jpg",
+        image: "/Photos/photo9.jpg",
         name: "Retos de lógica y algoritmos",
         date: "06/05/2026",
         time: "3:00 p.m.-7:00 p.m.",
@@ -108,21 +108,21 @@ const MOCK_EVENTS: EventData[] = [
 ];
 
 export default function EventSection() {
-    const [selectedType, setSelectedType] = useState<string>("All");
-    const [selectedMonth, setSelectedMonth] = useState<string>("All");
+    const [selectedType, setSelectedType] = useState<string>("Todos");
+    const [selectedMonth, setSelectedMonth] = useState<string>("Todos");
 
     // Filtros
     const filteredEvents = MOCK_EVENTS.filter(event => {
-        const typeMatch = selectedType === "All" || event.type === selectedType;
+        const typeMatch = selectedType === "Todos" || event.type === selectedType;
         const date = new Date(event.date);
         const month = date.toLocaleString('default', { month: 'long' });
-        const monthMatch = selectedMonth === "All" || month.toLowerCase() === selectedMonth.toLowerCase();
+        const monthMatch = selectedMonth === "Todos" || month.toLowerCase() === selectedMonth.toLowerCase();
 
         return typeMatch && monthMatch;
     });
 
-    const types = ["Todo", ...Array.from(new Set(MOCK_EVENTS.map(e => e.type)))];
-    const months = ["Todo"];
+    const types = ["Todos", ...Array.from(new Set(MOCK_EVENTS.map(e => e.type)))];
+    const months = ["Todos", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio"];
 
     return (
         <section className="event-section">
