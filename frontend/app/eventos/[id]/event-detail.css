@@ -1,0 +1,255 @@
+.event-detail-page {
+  padding: 2.5rem 1rem 4rem;
+}
+
+.event-detail-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.event-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #10477d;
+  font-weight: 700;
+  text-decoration: none;
+  width: fit-content;
+}
+
+.event-back-link:hover {
+  color: #0d66ba;
+}
+
+.event-back-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.event-detail-hero {
+  background: #fff;
+  border: 1px solid #deebf7;
+  border-radius: 1.1rem;
+  overflow: hidden;
+  box-shadow: 0 18px 38px -28px rgba(2, 75, 146, 0.55);
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.event-detail-image-wrap {
+  position: relative;
+  min-height: 280px;
+}
+
+.event-detail-image {
+  object-fit: cover;
+}
+
+.event-detail-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 27, 52, 0.12) 0%, rgba(6, 27, 52, 0.66) 100%);
+}
+
+.event-detail-badges {
+  position: absolute;
+  top: 0.95rem;
+  left: 0.95rem;
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.event-detail-badge {
+  padding: 0.36rem 0.72rem;
+  border-radius: 9999px;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.event-detail-badge-type {
+  background: rgba(2, 75, 146, 0.85);
+}
+
+.event-detail-badge-status {
+  background: rgba(13, 115, 90, 0.84);
+}
+
+.event-detail-main-info {
+  padding: 1.2rem;
+}
+
+.event-detail-main-info h1 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.5vw, 2rem);
+  color: #06274d;
+  line-height: 1.2;
+}
+
+.event-detail-main-info p {
+  margin: 0.75rem 0 0;
+  color: #4e6279;
+  line-height: 1.6;
+}
+
+.event-detail-meta-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.event-detail-meta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.62rem;
+  border-radius: 0.8rem;
+  border: 1px solid #e1ebf6;
+  background: #f7fafe;
+  padding: 0.72rem;
+}
+
+.event-detail-meta-item svg {
+  width: 1rem;
+  height: 1rem;
+  color: #0f4a83;
+  margin-top: 0.1rem;
+}
+
+.event-detail-meta-item span {
+  display: block;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #5d7188;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.event-detail-meta-item strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: #123350;
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.event-detail-address {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #e1ebf6;
+  border-radius: 0.8rem;
+  background: #fbfdff;
+}
+
+.event-detail-address span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5e6f84;
+  font-weight: 700;
+}
+
+.event-detail-address p {
+  margin: 0.35rem 0 0;
+  font-size: 0.93rem;
+  color: #122f49;
+}
+
+.event-detail-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.event-detail-panel {
+  background: #fff;
+  border: 1px solid #deebf7;
+  border-radius: 1rem;
+  padding: 1.1rem;
+}
+
+.event-detail-panel h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #06274d;
+  font-size: 1.02rem;
+}
+
+.event-detail-panel h2 svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.event-detail-panel ul {
+  margin: 0.85rem 0 0;
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.event-detail-panel li {
+  color: #2a425a;
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+
+.event-detail-registration {
+  display: grid;
+  grid-template-columns: 0.82fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.event-detail-registration-copy {
+  background: linear-gradient(155deg, #eaf4ff 0%, #f4f8fd 100%);
+  border: 1px solid #dce7f5;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.event-detail-registration-copy h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #06274d;
+}
+
+.event-detail-registration-copy p {
+  margin: 0.55rem 0 0;
+  color: #3f5974;
+  line-height: 1.6;
+}
+
+@media (min-width: 960px) {
+  .event-detail-hero {
+    grid-template-columns: 42% 58%;
+  }
+
+  .event-detail-main-info {
+    padding: 1.45rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .event-detail-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .event-detail-registration {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .event-detail-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}

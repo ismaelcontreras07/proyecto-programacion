@@ -1,19 +1,9 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Calendar, Clock3, MapPin, Ticket, ArrowRight } from "lucide-react";
+import type { EventData } from "../../lib/events";
 import "./event-card.css";
-
-export interface EventData {
-    id: string;
-    image: string;
-    name: string;
-    date: string;
-    time: string;
-    place: string;
-    location: string;
-    spots: number;
-    type: "Presencial"|"En línea";
-}
 
 interface EventCardProps {
     event: EventData;
@@ -113,10 +103,10 @@ export default function EventCard({ event }: EventCardProps) {
                         </div>
                     </div>
 
-                    <button type="button" className="event-cta">
+                    <Link href={`/eventos/${event.id}`} className="event-cta">
                         Ver detalles
                         <ArrowRight className="event-cta-icon" />
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>
