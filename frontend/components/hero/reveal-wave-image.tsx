@@ -231,13 +231,13 @@ interface RevealWaveImageProps {
 
 export const RevealWaveImage = ({
     src,
-    revealRadius = 0.2,
-    revealSoftness = 0.5,
-    pixelSize = 2,
+    revealRadius = 0.3,
+    revealSoftness = 0.9,
+    pixelSize = 3,
     waveSpeed = 0.2,
     waveFrequency = 1.0,
     waveAmplitude = 0.1,
-    mouseRadius = 0.2,
+    mouseRadius = 0.4,
     className = "h-full w-full",
 }: RevealWaveImageProps) => {
     const [isMouseInCanvas, setIsMouseInCanvas] = useState(false);

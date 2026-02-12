@@ -14,8 +14,8 @@
     align-items: center;
     text-align: center;
     background-color: #fff;
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius);
+    padding: 1rem 1rem;
+    border-radius: 0.5rem;
 }
 
 @media (min-width: 768px) {
@@ -64,7 +64,7 @@
 }
 
 .filter-select:hover {
-    color: #d4d4d8;
+    color: var(--azul-unimex);
     /* zinc-300 */
 }
 

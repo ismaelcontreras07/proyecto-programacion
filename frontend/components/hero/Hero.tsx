@@ -23,6 +23,7 @@ export default function Hero() {
             case "/login":
                 return "LOGIN"
             default:
+                if (pathname?.startsWith("/eventos")) return "Unimex"
                 if (pathname?.startsWith("/admin")) return "ADMIN"
                 return "LLEVAME"
         }

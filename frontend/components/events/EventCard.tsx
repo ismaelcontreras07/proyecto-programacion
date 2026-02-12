@@ -1,75 +1,112 @@
 import React from "react";
-import { Calendar, Clock, MapPin, Users, Ticket } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { Calendar, Clock3, MapPin, Ticket, ArrowRight } from "lucide-react";
+import type { EventData } from "../../lib/events";
 import "./event-card.css";
-
-export interface EventData {
-    id: string;
-    image: string;
-    name: string;
-    date: string;
-    time: string;
-    place: string;
-    location: string;
-    spots: number;
-    type: "Presencial"|"En línea";
-}
 
 interface EventCardProps {
     event: EventData;
 }
 
 export default function EventCard({ event }: EventCardProps) {
-    const getBadgeClass = (type: string) => {
-        switch (type) {
-            case "Concert": return "badge-concert";
-            case "Workshop": return "badge-workshop";
-            case "Conference": return "badge-conference";
-            case "Meetup": return "badge-meetup";
-            default: return "badge-default";
-        }
+    const getTypeBadgeClass = (type: EventData["type"]) => {
+        return type === "Presencial" ? "badge-onsite" : "badge-online";
     };
 
-    const isLowSpots = event.spots < 20;
+    const getAvailability = (spots: number) => {
+        if (spots <= 20) return { label: "Ultimos lugares", className: "availability-critical" };
+        if (spots <= 80) return { label: "Alta demanda", className: "availability-warning" };
+        return { label: "Disponible", className: "availability-ok" };
+    };
+
+    const formatDate = (date: string, options?: Intl.DateTimeFormatOptions) => {
+        const parsedDate = new Date(date);
+        if (Number.isNaN(parsedDate.getTime())) return date;
+
+        return parsedDate.toLocaleDateString("es-MX", options ?? {
+            weekday: "short",
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    };
+
+    const availability = getAvailability(event.spots);
+    const isLowSpots = event.spots <= 20;
 
     return (
         <div className="event-card group">
             <div className="event-image-container">
-                <img src={event.image} alt={event.name} className="event-image" />
+                <Image
+                    src={event.image}
+                    alt={event.name}
+                    fill
+                    className="event-image"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+                <div className="event-image-overlay" />
+
                 <div className="event-badges">
-                    <span className={`event-badge ${getBadgeClass(event.type)}`}>
+                    <span className={`event-badge event-type-badge ${getTypeBadgeClass(event.type)}`}>
                         {event.type}
                     </span>
+                    <span className={`event-badge event-availability-badge ${availability.className}`}>
+                        {availability.label}
+                    </span>
+                </div>
+
+                <div className="event-date-chip">
+                    <Calendar className="event-date-chip-icon" />
+                    <span>{formatDate(event.date, { day: "2-digit", month: "short" })}</span>
                 </div>
             </div>
 
             <div className="event-content">
-                <h3 className="event-title">{event.name}</h3>
+                <div className="event-header">
+                    <h3 className="event-title">{event.name}</h3>
+                    <p className="event-subtitle">{event.place}</p>
+                </div>
 
-                <div className="event-details">
-                    <div className="event-detail-row">
+                <div className="event-details-grid">
+                    <div className="event-detail-card">
                         <Calendar className="event-detail-icon" />
-                        <span>{new Date(event.date).toLocaleDateString()}</span>
+                        <div className="event-detail-copy">
+                            <span className="event-detail-label">Fecha</span>
+                            <span className="event-detail-value">{formatDate(event.date)}</span>
+                        </div>
                     </div>
-                    <div className="event-detail-row">
-                        <Clock className="event-detail-icon" />
-                        <span>{event.time}</span>
+                    <div className="event-detail-card">
+                        <Clock3 className="event-detail-icon" />
+                        <div className="event-detail-copy">
+                            <span className="event-detail-label">Horario</span>
+                            <span className="event-detail-value">{event.time}</span>
+                        </div>
                     </div>
-                    <div className="event-detail-row">
+                    <div className="event-detail-card event-detail-card-full">
                         <MapPin className="event-detail-icon" />
-                        <span className="truncate">{event.place}, {event.location}</span>
+                        <div className="event-detail-copy">
+                            <span className="event-detail-label">Ubicacion</span>
+                            <span className="event-detail-value truncate-2-lines">{event.location}</span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="event-divider" />
-
-                <div className="event-spots">
-                    <div className="event-detail-row">
+                <div className="event-footer">
+                    <div className="event-spots">
                         <Ticket className="event-detail-icon" />
-                        <span className="spots-label">Cupos disponibles</span>
+                        <div className="event-detail-copy">
+                            <span className="spots-label">Cupos disponibles</span>
+                            <span className={`spots-count ${isLowSpots ? "spots-low" : ""}`}>
+                                {event.spots}
+                            </span>
+                        </div>
                     </div>
-                    <span className={`spots-count ${isLowSpots ? "spots-low" : ""}`}>
-                        {event.spots}
-                    </span>
+
+                    <Link href={`/eventos/${event.id}`} className="event-cta">
+                        Ver detalles
+                        <ArrowRight className="event-cta-icon" />
+                    </Link>
                 </div>
             </div>
         </div>
