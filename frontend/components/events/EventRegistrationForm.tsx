@@ -117,7 +117,7 @@ export default function EventRegistrationForm({ eventName }: EventRegistrationFo
         </label>
 
         <label className="event-registration-field">
-          <span>Semestre</span>
+          <span>Cuatrimestre</span>
           <select
             name="semester"
             value={formData.semester}
@@ -125,18 +125,18 @@ export default function EventRegistrationForm({ eventName }: EventRegistrationFo
             required
           >
             <option value="" disabled>
-              Selecciona tu semestre
+              Selecciona tu cuatrimestre
             </option>
-            <option value="1">1° semestre</option>
-            <option value="2">2° semestre</option>
-            <option value="3">3° semestre</option>
-            <option value="4">4° semestre</option>
-            <option value="5">5° semestre</option>
-            <option value="6">6° semestre</option>
-            <option value="7">7° semestre</option>
-            <option value="8">8° semestre</option>
-            <option value="9">9° semestre</option>
-            <option value="10">10° semestre</option>
+            <option value="1">1° cuatrimestre</option>
+            <option value="2">2° cuatrimestre</option>
+            <option value="3">3° cuatrimestre</option>
+            <option value="4">4° cuatrimestre</option>
+            <option value="5">5° cuatrimestre</option>
+            <option value="6">6° cuatrimestre</option>
+            <option value="7">7° cuatrimestre</option>
+            <option value="8">8° cuatrimestre</option>
+            <option value="9">9° cuatrimestre</option>
+            <option value="10">10° cuatrimestre</option>
           </select>
         </label>
 

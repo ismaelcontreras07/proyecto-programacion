@@ -1,10 +1,10 @@
 .event-card {
     position: relative;
     background: linear-gradient(180deg, #ffffff 0%, #fdfdff 100%);
-    border-radius: 1rem;
-    border: 1px solid #e7edf4;
+    border-radius: 0.5rem;
     overflow: hidden;
-    box-shadow: 0 12px 28px -20px rgba(2, 75, 146, 0.45);
+    border: 1px solid #e3ecf6;
+    /* box-shadow: 0 12px 28px -20px rgba(2, 75, 146, 0.45); */
     transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
     height: 100%;
     display: flex;
@@ -14,7 +14,7 @@
 .event-card:hover {
     transform: translateY(-8px);
     border-color: #d3dfef;
-    box-shadow: 0 24px 45px -26px rgba(2, 75, 146, 0.6);
+    box-shadow: 0 14px 35px -6px rgba(2, 74, 146, 0.217);
 }
 
 .event-image-container {
@@ -157,7 +157,7 @@
 .event-detail-card {
     background: linear-gradient(180deg, #f8fafd 0%, #f2f6fb 100%);
     border: 1px solid #e3ecf6;
-    border-radius: 0.82rem;
+    border-radius: 0.4rem;
     padding: 0.72rem;
     display: flex;
     align-items: flex-start;

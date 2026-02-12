@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Hero from "./hero/Hero";
 import { Footer } from "./footer/Footer";
-import { Facebook, Instagram } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -23,7 +23,9 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                 logo={<img src="/logo-unimex-horizontal.png" alt="Unimex Logo" style={{ height: '70px', width: 'auto' }} />}
                 socialLinks={[
                     { icon: <Facebook size={20} />, href: "https://www.facebook.com/unimex", label: "Facebook" },
-                    { icon: <Instagram size={20} />, href: "https://www.instagram.com/unimexicana", label: "Instagram" },
+                    { icon: <Instagram size={20} />, href: "https://www.instagram.com/universidadmexicana/", label: "Instagram" },
+                    { icon: <Linkedin size={20} />, href: "https://www.linkedin.com/school/universidad-mexicana/", label: "LinkedIn" },
+                    { icon: <Youtube size={20} />, href: "https://www.youtube.com/user/SoyUNIMEX", label: "YouTube" },
                 ]}
                 mainLinks={[
                     { href: "/", label: "Inicio" },
