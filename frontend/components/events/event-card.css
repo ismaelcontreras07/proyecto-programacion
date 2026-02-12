@@ -93,17 +93,10 @@
 .event-title {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #18181b;
+    color: var(--azul-unimex);
     /* zinc-900 */
     margin: 0;
     line-height: 1.4;
-}
-
-@media (prefers-color-scheme: dark) {
-    .event-title {
-        color: #f4f4f5;
-        /* zinc-100 */
-    }
 }
 
 .event-details {
