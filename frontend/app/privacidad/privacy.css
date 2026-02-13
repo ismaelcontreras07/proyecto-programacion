@@ -14,7 +14,6 @@
     font-size: 2.25rem;
     font-weight: 800;
     color: #18181b;
-    /* zinc-900 */
     letter-spacing: -0.025em;
     margin-bottom: 1rem;
 }
@@ -22,18 +21,15 @@
 .privacy-last-updated {
     font-size: 0.875rem;
     color: #71717a;
-    /* zinc-500 */
 }
 
 @media (prefers-color-scheme: dark) {
     .privacy-title {
         color: #f4f4f5;
-        /* zinc-100 */
     }
 
     .privacy-last-updated {
         color: #a1a1aa;
-        /* zinc-400 */
     }
 }
 
@@ -53,7 +49,6 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: #18181b;
-    /* zinc-900 */
     margin: 0;
 }
 

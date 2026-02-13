@@ -1,63 +1,92 @@
-"use client"
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import React, { createContext, useContext, useState } from "react";
+import { useRouter } from "next/navigation";
 
-type Role = "admin" | "user" | null
+type Role = "admin" | "user";
 
 interface User {
-    username: string
-    role: Role
+  id: string;
+  username: string;
+  full_name: string;
+  email: string;
+  role: Role;
+  student_id?: string | null;
+  career?: string | null;
+  semester?: number | null;
+  phone?: string | null;
+  phone_verified?: boolean;
+}
+
+interface AuthSession {
+  accessToken: string;
+  user: User;
 }
 
 interface AuthContextType {
-    user: User | null
-    login: (username: string, role: Role) => void
-    logout: () => void
-    isAuthenticated: boolean
-    isLoading: boolean
+  user: User | null;
+  accessToken: string | null;
+  login: (session: AuthSession) => void;
+  logout: () => void;
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AUTH_STORAGE_KEY = "auth_session";
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function readStoredSession(): AuthSession | null {
+  if (typeof window === "undefined") return null;
+
+  const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as AuthSession;
+    if (!parsed?.accessToken || !parsed?.user) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    const [user, setUser] = useState<User | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
-    const router = useRouter()
+  const [session, setSession] = useState<AuthSession | null>(() => readStoredSession());
+  const router = useRouter();
 
-    useEffect(() => {
-        // Check local storage for persisted session
-        const storedUser = localStorage.getItem("user")
-        if (storedUser) {
-            setUser(JSON.parse(storedUser))
-        }
-        setIsLoading(false)
-    }, [])
+  const login = (newSession: AuthSession) => {
+    setSession(newSession);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
+    router.push("/");
+  };
 
-    const login = (username: string, role: Role) => {
-        const newUser = { username, role }
-        setUser(newUser)
-        localStorage.setItem("user", JSON.stringify(newUser))
-        router.push("/")
-    }
+  const logout = () => {
+    setSession(null);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    router.push("/login");
+  };
 
-    const logout = () => {
-        setUser(null)
-        localStorage.removeItem("user")
-        router.push("/login")
-    }
-
-    return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, isLoading }}>
-            {children}
-        </AuthContext.Provider>
-    )
-}
+  return (
+    <AuthContext.Provider
+      value={{
+        user: session?.user ?? null,
+        accessToken: session?.accessToken ?? null,
+        login,
+        logout,
+        isAuthenticated: !!session?.user,
+        isLoading: false,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
 export const useAuth = () => {
-    const context = useContext(AuthContext)
-    if (context === undefined) {
-        throw new Error("useAuth must be used within an AuthProvider")
-    }
-    return context
-}
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

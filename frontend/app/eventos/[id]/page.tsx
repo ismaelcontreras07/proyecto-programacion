@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Clock3, MapPin, Ticket, GraduationCap } from "lucide-react";
-import EventRegistrationForm from "../../../components/events/EventRegistrationForm";
+import EventRegistrationAction from "../../../components/events/EventRegistrationAction";
 import { EVENTS, getEventById } from "../../../lib/events";
 import "./event-detail.css";
 
@@ -137,11 +137,11 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           <div className="event-detail-registration-copy">
             <h2>Regístrate al evento</h2>
             <p>
-              Esta sección permite a los alumnos reservar su lugar. Completa el formulario y guarda el
-              correo de confirmación para el día del evento.
+              El registro ahora se hace directamente desde tu cuenta activa. Si no tienes sesión iniciada,
+              se te enviará automáticamente a la página de acceso.
             </p>
           </div>
-          <EventRegistrationForm eventName={event.name} />
+          <EventRegistrationAction eventId={event.id} eventName={event.name} />
         </section>
       </section>
     </main>

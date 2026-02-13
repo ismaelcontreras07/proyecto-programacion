@@ -8,15 +8,19 @@ export default function LenisProvider() {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduceMotion) return;
 
-    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+    const isTouchDevice =
+      window.matchMedia("(hover: none) and (pointer: coarse)").matches ||
+      navigator.maxTouchPoints > 0;
+
+    // On touch devices, native scrolling is usually smoother and avoids Lenis jumpiness.
+    if (isTouchDevice) return;
+
     const lenis = new Lenis({
       autoRaf: true,
       smoothWheel: true,
-      syncTouch: isTouchDevice,
-      syncTouchLerp: 0.085,
-      touchInertiaExponent: 26,
-      lerp: isTouchDevice ? 0.14 : 0.1,
-      wheelMultiplier: 0.92,
+      syncTouch: false,
+      lerp: 0.09,
+      wheelMultiplier: 0.9,
       touchMultiplier: 1,
       gestureOrientation: "vertical",
       autoResize: true,
