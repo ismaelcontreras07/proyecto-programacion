@@ -2,7 +2,7 @@ import "./privacy.css";
 
 export default function PrivacyPage() {
     return (
-        <main className="min-h-screen bg-white dark:bg-black">
+        <main className="min-h-screen ">
             <div className="privacy-container">
                 <div className="privacy-header">
                     <h1 className="privacy-title">Política de Privacidad</h1>
