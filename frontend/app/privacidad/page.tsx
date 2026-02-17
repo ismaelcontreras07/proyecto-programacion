@@ -1,6 +1,8 @@
 import "./privacy.css";
 import { CalendarDays, Database, LockKeyhole, Mail, ShieldCheck, FileText } from "lucide-react";
 
+// cambio celic
+
 export default function PrivacyPage() {
     const sections = [
         { id: "introduccion", label: "1. Introducción" },
