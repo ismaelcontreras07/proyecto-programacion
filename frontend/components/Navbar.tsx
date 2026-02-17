@@ -17,8 +17,11 @@ const Navbar1 = () => {
 
     const baseLinks = [
         { name: "Inicio", href: "/" },
-        { name: "Contacto", href: "/contacto" },
         { name: "Privacidad", href: "/privacidad" },
+    ]
+
+    const userLinks = [
+        { name: "Mis eventos", href: "/mis-eventos" },
     ]
 
     const adminLinks = [
@@ -26,7 +29,11 @@ const Navbar1 = () => {
         { name: "Dashboard", href: "/dashboard" },
     ]
 
-    const links = user?.role === "admin" ? [...baseLinks, ...adminLinks] : baseLinks
+    const links = user?.role === "admin"
+        ? [...baseLinks, ...adminLinks]
+        : user?.role === "user"
+            ? [...baseLinks, ...userLinks]
+            : baseLinks
 
     return (
         <div className="navbar-container">
@@ -65,7 +72,7 @@ const Navbar1 = () => {
                         <motion.div whileHover={{ scale: 1.05 }}>
                             <Button
                                 onClick={logout}
-                                variant="ghost"
+                                variant="primary"
                                 className="text-red"
                             >
                                 <LogOut size={18} />
@@ -133,8 +140,8 @@ const Navbar1 = () => {
                                             logout();
                                             toggleMenu();
                                         }}
-                                        variant="ghost"
-                                        className="text-red w-full justify-start"
+                                        variant="primary"
+                                        className="w-full justify-center"
                                     >
                                         <LogOut size={20} />
                                         <span>Cerrar Sesión</span>

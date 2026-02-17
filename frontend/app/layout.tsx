@@ -1,5 +1,3 @@
-"use client";
-
 import { Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
@@ -9,6 +7,7 @@ import LenisProvider from "../components/LenisProvider";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -23,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${inter.className} ${inter.variable} ${geistMono.variable} antialiased`}>
         <LenisProvider />
         <AuthProvider>
           <LayoutWrapper>

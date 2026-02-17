@@ -228,6 +228,87 @@
   line-height: 1.6;
 }
 
+.event-detail-register-card {
+  background: #fff;
+  border: 1px solid #deebf7;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 14px 30px -25px rgba(2, 75, 146, 0.6);
+}
+
+.event-detail-register-title {
+  margin: 0;
+  color: #06274d;
+  font-size: 1.1rem;
+}
+
+.event-detail-register-description {
+  margin: 0.55rem 0 0;
+  color: #415b77;
+  line-height: 1.55;
+}
+
+.event-detail-register-actions {
+  margin-top: 0.9rem;
+}
+
+.event-detail-register-btn {
+  border: none;
+  border-radius: 0.7rem;
+  padding: 0.72rem 1rem;
+  background: linear-gradient(135deg, #024b92 0%, #1f75ce 100%);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.event-detail-register-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px -16px rgba(2, 75, 146, 0.9);
+}
+
+.event-detail-register-btn:disabled {
+  opacity: 0.68;
+  cursor: not-allowed;
+}
+
+.event-detail-register-btn-login {
+  background: linear-gradient(135deg, #115693 0%, #2578c2 100%);
+}
+
+.event-detail-register-error,
+.event-detail-register-success {
+  margin: 0.78rem 0 0;
+  padding: 0.62rem 0.72rem;
+  border-radius: 0.5rem;
+  font-size: 0.86rem;
+}
+
+.event-detail-register-error {
+  background: #ffe6eb;
+  color: #9e1c39;
+  border: 1px solid #f9b8c8;
+}
+
+.event-detail-register-success {
+  background: #e7f9ef;
+  color: #16653d;
+  border: 1px solid #bdeccd;
+}
+
+.event-detail-register-note {
+  margin: 0.7rem 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #486684;
+  font-size: 0.83rem;
+}
+
 @media (min-width: 960px) {
   .event-detail-hero {
     grid-template-columns: 42% 58%;
