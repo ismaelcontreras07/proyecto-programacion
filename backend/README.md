@@ -1,13 +1,20 @@
-# Backend UNIMEX (DB-ready)
+# Backend UNIMEX
 
-Este backend ya queda funcional sin DB real usando un repositorio en memoria, con estructura lista para cambiar a SQL cuando la base esté disponible.
+Este backend ya usa SQLite por defecto y crea automáticamente la base local en `unimex.db` a partir de `schema.sql`. También puede ejecutarse en memoria para pruebas rápidas.
 
 ## Qué incluye
 
 - Autenticación: `POST /api/auth/login`, `GET /api/auth/me`
-- Alta de cuenta con SMS: `POST /api/auth/register`, `POST /api/auth/verify-sms`
-- Eventos: `GET /api/events`, `GET /api/events/{id}`
-- Registros de alumnos: `POST /api/registrations`
+- Alta de cuenta directa: `POST /api/auth/register`
+- Eventos:
+  - `GET /api/events`, `GET /api/events/{id}`
+  - `POST /api/events/upload-image` (admin, multipart/form-data)
+  - `POST /api/events` (admin)
+  - `PUT /api/events/{id}` (admin)
+  - `DELETE /api/events/{id}` (admin)
+- Registros de alumnos:
+  - `POST /api/registrations`
+  - `GET /api/registrations/me`
 - Administración:
   - `GET /api/events/{id}/registrations` (admin)
   - `GET /api/admin/summary` (admin)
@@ -36,26 +43,47 @@ cd /Users/chazanet/Documents/proyecto-programacion/backend
 uvicorn main:app --reload
 ```
 
+Configurar entorno (recomendado):
+
+```bash
+cd /Users/chazanet/Documents/proyecto-programacion/backend
+cp .env.example .env
+```
+
+Inicializar DB manualmente (opcional):
+
+```bash
+cd /Users/chazanet/Documents/proyecto-programacion/backend
+python init_db.py
+```
+
+Al iniciar por primera vez:
+
+- Se crea `/Users/chazanet/Documents/proyecto-programacion/backend/unimex.db`
+- Se inicializa el schema desde `schema.sql`
+- Se insertan usuarios y eventos seed si la DB está vacía
+
 Docs OpenAPI:
 
 - `http://localhost:8000/docs`
 
 ## Credenciales seed (demo)
 
-- Admin: `admin / admin`
-- User: `user / user`
+- Admin: matrícula `ADM00001-00`, contraseña `admin`
+- User: matrícula `ALU00001-01`, contraseña `user`
 
-## Registro de usuarios (sin DB todavía)
+## Registro de usuarios (sin SMS)
 
 El backend ya permite flujo de alta:
 
 1. `POST /api/auth/register`
-2. `POST /api/auth/verify-sms`
 
-El SMS se simula en memoria y devuelve `dev_sms_code` para pruebas locales.
-La contraseña inicial del usuario se define como su `student_id` (matrícula).
+El registro solicita: nombre, matrícula, contraseña, carrera y cuatrimestre.
+La matrícula debe cumplir formato `XXXXXXXX-XX`.
 
-Nota de registro a evento: `POST /api/registrations` ahora requiere token Bearer y toma datos del perfil autenticado; solo recibe `event_id`.
+Notas de registro a evento:
+- `POST /api/registrations` requiere token Bearer y toma datos del perfil autenticado; solo recibe `event_id`.
+- `GET /api/registrations/me` devuelve los eventos donde el alumno autenticado ya está registrado.
 
 ## Variables opcionales
 
@@ -63,9 +91,11 @@ Nota de registro a evento: `POST /api/registrations` ahora requiere token Bearer
 - `APP_SECRET_KEY`
 - `APP_PASSWORD_SALT`
 - `APP_ACCESS_TOKEN_TTL_SECONDS`
+- `APP_STORE_BACKEND` (`sqlite` por defecto, usar `memory` para volver al store en memoria)
+- `APP_DB_PATH` (ruta personalizada para el archivo SQLite)
 
-## Swap a DB real (cuando esté lista)
+## Notas de persistencia
 
-1. Mantener `models.py`, `services.py` y `routers/`.
-2. Reemplazar `InMemoryStore` (`repositories.py`) por implementación SQL usando `schema.sql`.
-3. Inyectar el repositorio SQL desde `dependencies.py` sin cambiar controladores.
+1. `services.py` y `routers/` mantienen el mismo contrato.
+2. `dependencies.py` selecciona el repositorio (`sqlite` o `memory`) por variable de entorno.
+3. `schema.sql` se adapta automáticamente a SQLite solo para la sintaxis `IDENTITY`.

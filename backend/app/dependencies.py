@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import os
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from .database import initialize_database
 from .models import UserPublic
-from .repositories import InMemoryStore
+from .repositories import InMemoryStore, SqliteStore
 from .seed_data import build_seed_events, build_seed_users
 from .security import TokenError, decode_access_token
 from .services import (
@@ -16,27 +19,38 @@ from .services import (
 )
 
 
-_store = InMemoryStore(users=build_seed_users(), events=build_seed_events())
+def _build_store():
+    use_in_memory = os.getenv("APP_STORE_BACKEND", "sqlite").casefold() == "memory"
+    if use_in_memory:
+        return InMemoryStore(users=build_seed_users(), events=build_seed_events())
+
+    initialize_database()
+    sqlite_store = SqliteStore()
+    sqlite_store.seed_if_empty(users=build_seed_users(), events=build_seed_events())
+    return sqlite_store
+
+
+_store = _build_store()
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def get_store() -> InMemoryStore:
+def get_store():
     return _store
 
 
-def get_auth_service(store: InMemoryStore = Depends(get_store)) -> AuthService:
+def get_auth_service(store=Depends(get_store)) -> AuthService:
     return AuthService(store)
 
 
-def get_event_service(store: InMemoryStore = Depends(get_store)) -> EventService:
+def get_event_service(store=Depends(get_store)) -> EventService:
     return EventService(store)
 
 
-def get_registration_service(store: InMemoryStore = Depends(get_store)) -> RegistrationService:
+def get_registration_service(store=Depends(get_store)) -> RegistrationService:
     return RegistrationService(store)
 
 
-def get_admin_service(store: InMemoryStore = Depends(get_store)) -> AdminService:
+def get_admin_service(store=Depends(get_store)) -> AdminService:
     return AdminService(store)
 
 
@@ -61,7 +75,7 @@ def get_current_user(
         ) from exc
 
     try:
-        return auth_service.get_user_public_by_username(payload.sub)
+        return auth_service.get_user_public_by_id(payload.sub)
     except AuthenticationError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -77,4 +91,3 @@ def require_admin(current_user: UserPublic = Depends(get_current_user)) -> UserP
             detail="Admin role required",
         )
     return current_user
-

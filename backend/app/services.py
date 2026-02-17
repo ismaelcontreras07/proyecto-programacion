@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import random
 import re
 from collections import Counter
 from datetime import datetime, timedelta
@@ -9,21 +8,21 @@ from .models import (
     AdminEventStats,
     AdminSummary,
     EventDetail,
+    EventCreateRequest,
     EventRecord,
     EventSummary,
     EventType,
+    EventUpdateRequest,
     LoginRequest,
     LoginResponse,
-    PendingSmsVerification,
     RegistrationCreate,
     RegistrationPublic,
     RegistrationRecord,
     RegistrationStatus,
     SignUpRequest,
-    SignUpResponse,
+    UserEventRegistration,
     UserPublic,
     UserRecord,
-    VerifySmsRequest,
 )
 from .repositories import InMemoryStore
 from .security import create_access_token, hash_password, verify_password
@@ -49,10 +48,6 @@ class CapacityError(ServiceError):
     pass
 
 
-class VerificationError(ServiceError):
-    pass
-
-
 class AuthorizationError(ServiceError):
     pass
 
@@ -66,13 +61,10 @@ def _to_user_public(user: UserRecord) -> UserPublic:
         id=user.id,
         username=user.username,
         full_name=user.full_name,
-        email=user.email,
         role=user.role,
         student_id=user.student_id,
         career=user.career,
         semester=user.semester,
-        phone=user.phone,
-        phone_verified=user.phone_verified,
     )
 
 
@@ -103,120 +95,64 @@ def _to_registration_public(registration: RegistrationRecord) -> RegistrationPub
     return RegistrationPublic(**registration.model_dump())
 
 
-def _mask_phone(phone: str) -> str:
-    digits = re.sub(r"\D+", "", phone)
-    if len(digits) <= 4:
-        return phone
-    return f"{'*' * (len(digits) - 4)}{digits[-4:]}"
+def _to_user_event_registration(registration: RegistrationRecord, event: EventRecord) -> UserEventRegistration:
+    return UserEventRegistration(
+        registration_id=registration.id,
+        event_id=registration.event_id,
+        status=registration.status,
+        registered_at=registration.created_at,
+        event=_to_event_summary(event),
+    )
 
 
-def _build_username_from_email(email: str) -> str:
-    local_part = email.split("@", 1)[0]
-    local_part = re.sub(r"[^a-zA-Z0-9._-]", "", local_part)
-    return (local_part or "user").lower()
+def _build_username_from_student_id(student_id: str) -> str:
+    normalized = re.sub(r"[^A-Za-z0-9._-]", "", student_id)
+    return (normalized or "user").lower()
 
 
 class AuthService:
-    SMS_CODE_TTL_SECONDS = 300
-    MAX_SMS_ATTEMPTS = 5
-
     def __init__(self, store: InMemoryStore) -> None:
         self.store = store
 
     def login(self, payload: LoginRequest) -> LoginResponse:
-        user = self.store.get_user_by_identifier(payload.identifier)
+        user = self.store.get_user_by_student_id(payload.student_id)
         if not user or not user.is_active:
             raise AuthenticationError("Invalid credentials")
         if not verify_password(payload.password, user.password_hash):
             raise AuthenticationError("Invalid credentials")
 
-        token = create_access_token(subject=user.username, role=user.role)
+        token = create_access_token(subject=user.id, role=user.role)
         return LoginResponse(access_token=token, user=_to_user_public(user))
 
-    def start_signup(self, payload: SignUpRequest) -> SignUpResponse:
-        if self.store.get_user_by_email(payload.email):
-            raise ConflictError("Email is already registered")
+    def start_signup(self, payload: SignUpRequest) -> LoginResponse:
         if self.store.get_user_by_student_id(payload.student_id):
             raise ConflictError("Student ID is already registered")
 
-        verification_id = self.store.generate_sms_verification_id()
-        sms_code = f"{random.randint(0, 999999):06d}"
-        pending = PendingSmsVerification(
-            id=verification_id,
-            code=sms_code,
-            full_name=payload.full_name,
-            student_id=payload.student_id,
-            email=payload.email,
-            career=payload.career,
-            semester=payload.semester,
-            phone=payload.phone,
-            expires_at=datetime.utcnow() + timedelta(seconds=self.SMS_CODE_TTL_SECONDS),
-            attempts=0,
-        )
-        self.store.save_pending_sms_verification(pending)
-
-        print(f"[SMS] Sending verification code {sms_code} to {payload.phone}")
-
-        return SignUpResponse(
-            verification_id=verification_id,
-            expires_in_seconds=self.SMS_CODE_TTL_SECONDS,
-            sms_destination=_mask_phone(payload.phone),
-            dev_sms_code=sms_code,
-            message="Verification code sent via SMS. Your initial password will be your student ID.",
-        )
-
-    def verify_sms(self, payload: VerifySmsRequest) -> LoginResponse:
-        pending = self.store.get_pending_sms_verification(payload.verification_id)
-        if not pending:
-            raise NotFoundError("Verification request not found")
-        if pending.expires_at < datetime.utcnow():
-            self.store.delete_pending_sms_verification(pending.id)
-            raise VerificationError("Verification code expired")
-        if pending.attempts >= self.MAX_SMS_ATTEMPTS:
-            self.store.delete_pending_sms_verification(pending.id)
-            raise VerificationError("Verification attempts exceeded")
-
-        if pending.code != payload.code:
-            pending.attempts += 1
-            self.store.update_pending_sms_verification(pending)
-            raise VerificationError("Invalid verification code")
-
-        if self.store.get_user_by_email(pending.email):
-            self.store.delete_pending_sms_verification(pending.id)
-            raise ConflictError("Email is already registered")
-        if self.store.get_user_by_student_id(pending.student_id):
-            self.store.delete_pending_sms_verification(pending.id)
-            raise ConflictError("Student ID is already registered")
-
-        candidate_username = _build_username_from_email(pending.email)
+        candidate_username = _build_username_from_student_id(payload.student_id)
         suffix = 1
         while self.store.get_user_by_username(candidate_username):
             suffix += 1
-            candidate_username = f"{_build_username_from_email(pending.email)}{suffix}"
+            candidate_username = f"{_build_username_from_student_id(payload.student_id)}{suffix}"
 
         new_user = UserRecord(
             id=self.store.generate_user_id(),
             username=candidate_username,
-            full_name=pending.full_name,
-            email=pending.email,
+            full_name=payload.full_name,
             role="user",
-            password_hash=hash_password(pending.student_id),
+            password_hash=hash_password(payload.password),
             is_active=True,
-            student_id=pending.student_id,
-            career=pending.career,
-            semester=pending.semester,
-            phone=pending.phone,
-            phone_verified=True,
+            student_id=payload.student_id,
+            career=payload.career,
+            semester=payload.semester,
             created_at=datetime.utcnow(),
         )
         saved_user = self.store.create_user(new_user)
-        self.store.delete_pending_sms_verification(pending.id)
 
-        token = create_access_token(subject=saved_user.username, role=saved_user.role)
+        token = create_access_token(subject=saved_user.id, role=saved_user.role)
         return LoginResponse(access_token=token, user=_to_user_public(saved_user))
 
-    def get_user_public_by_username(self, username: str) -> UserPublic:
-        user = self.store.get_user_by_username(username)
+    def get_user_public_by_id(self, user_id: str) -> UserPublic:
+        user = self.store.get_user_by_id(user_id)
         if not user or not user.is_active:
             raise AuthenticationError("Invalid user")
         return _to_user_public(user)
@@ -236,6 +172,55 @@ class EventService:
             raise NotFoundError(f"Event {event_id} not found")
         return _to_event_detail(event)
 
+    def create_event(self, payload: EventCreateRequest) -> EventDetail:
+        now = datetime.utcnow()
+        event = EventRecord(
+            id=self.store.generate_event_id(),
+            image=payload.image,
+            name=payload.name,
+            date=payload.date,
+            time=payload.time,
+            place=payload.place,
+            location=payload.location,
+            spots=payload.spots,
+            type=payload.type,
+            summary=payload.summary,
+            agenda=payload.agenda,
+            requirements=payload.requirements,
+            created_at=now,
+            updated_at=now,
+        )
+        created = self.store.create_event(event)
+        return _to_event_detail(created)
+
+    def update_event(self, event_id: str, payload: EventUpdateRequest) -> EventDetail:
+        existing = self.store.get_event_by_id(event_id)
+        if not existing:
+            raise NotFoundError(f"Event {event_id} not found")
+
+        updated = EventRecord(
+            id=existing.id,
+            image=payload.image,
+            name=payload.name,
+            date=payload.date,
+            time=payload.time,
+            place=payload.place,
+            location=payload.location,
+            spots=payload.spots,
+            type=payload.type,
+            summary=payload.summary,
+            agenda=payload.agenda,
+            requirements=payload.requirements,
+            created_at=existing.created_at,
+            updated_at=datetime.utcnow(),
+        )
+        saved = self.store.update_event(updated)
+        return _to_event_detail(saved)
+
+    def delete_event(self, event_id: str) -> None:
+        if not self.store.delete_event(event_id):
+            raise NotFoundError(f"Event {event_id} not found")
+
 
 class RegistrationService:
     def __init__(self, store: InMemoryStore) -> None:
@@ -246,21 +231,30 @@ class RegistrationService:
         if not event:
             raise NotFoundError(f"Event {payload.event_id} not found")
 
+        existing = self.store.get_registration_by_event_and_student(payload.event_id, payload.student_id)
+        if existing and existing.status == RegistrationStatus.REGISTERED:
+            raise ConflictError("Ya te encuentras registrado en este evento")
+
         if event.spots <= 0:
             raise CapacityError("No spots available for this event")
 
-        if self.store.has_registration_for_student(payload.event_id, payload.student_id, payload.email):
-            raise ConflictError("This student is already registered for the event")
+        # Reuse the same registration row if it was previously cancelled.
+        if existing and existing.status == RegistrationStatus.CANCELLED:
+            existing.status = RegistrationStatus.REGISTERED
+            saved = self.store.update_registration(existing)
+
+            event.spots -= 1
+            event.updated_at = datetime.utcnow()
+            self.store.save_event(event)
+            return _to_registration_public(saved)
 
         registration = RegistrationRecord(
             id=self.store.generate_registration_id(),
             event_id=payload.event_id,
             full_name=payload.full_name,
             student_id=payload.student_id,
-            email=payload.email,
             career=payload.career,
             semester=payload.semester,
-            phone=payload.phone,
             status=RegistrationStatus.REGISTERED,
             created_at=datetime.utcnow(),
         )
@@ -278,6 +272,18 @@ class RegistrationService:
         records = self.store.list_registrations(event_id=event_id)
         return [_to_registration_public(record) for record in records]
 
+    def list_registrations_by_current_user(self, current_user: UserPublic) -> list[UserEventRegistration]:
+        if current_user.role != "user":
+            raise AuthorizationError("Only student accounts can list personal registrations")
+
+        records = self.store.list_registrations(student_id=current_user.student_id)
+        registrations: list[UserEventRegistration] = []
+        for record in records:
+            event = self.store.get_event_by_id(record.event_id)
+            if event:
+                registrations.append(_to_user_event_registration(record, event))
+        return registrations
+
     def create_registration_from_user(self, event_id: str, current_user: UserPublic) -> RegistrationPublic:
         if current_user.role != "user":
             raise AuthorizationError("Only student accounts can register to events")
@@ -286,7 +292,6 @@ class RegistrationService:
             not current_user.student_id
             or not current_user.career
             or current_user.semester is None
-            or not current_user.phone
         ):
             raise ProfileIncompleteError("Your account profile is incomplete to register an event")
 
@@ -294,12 +299,37 @@ class RegistrationService:
             event_id=event_id,
             full_name=current_user.full_name,
             student_id=current_user.student_id,
-            email=current_user.email,
             career=current_user.career,
             semester=current_user.semester,
-            phone=current_user.phone,
         )
         return self.create_registration(payload)
+
+    def cancel_registration_from_user(self, event_id: str, current_user: UserPublic) -> RegistrationPublic:
+        if current_user.role != "user":
+            raise AuthorizationError("Only student accounts can cancel event registrations")
+
+        if not current_user.student_id:
+            raise AuthorizationError("Student account without student ID cannot cancel registrations")
+
+        event = self.store.get_event_by_id(event_id)
+        if not event:
+            raise NotFoundError(f"Event {event_id} not found")
+
+        existing = self.store.get_registration_by_event_and_student(event_id, current_user.student_id)
+        if not existing:
+            raise NotFoundError("You are not registered for this event")
+
+        if existing.status == RegistrationStatus.CANCELLED:
+            raise ConflictError("This registration is already cancelled")
+
+        existing.status = RegistrationStatus.CANCELLED
+        saved = self.store.update_registration(existing)
+
+        event.spots += 1
+        event.updated_at = datetime.utcnow()
+        self.store.save_event(event)
+
+        return _to_registration_public(saved)
 
 
 class AdminService:

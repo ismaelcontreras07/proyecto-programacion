@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+# Load backend/.env before importing modules that read environment variables.
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 from app.routers import (
     admin_router,
@@ -25,7 +31,7 @@ def create_app() -> FastAPI:
         version="1.0.0",
         description=(
             "Backend base para autenticación, catálogo de eventos y registros de alumnos. "
-            "Persistencia temporal en memoria, listo para conectar DB."
+            "Persistencia SQLite conectada con schema SQL."
         ),
     )
 
@@ -36,6 +42,10 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    uploads_dir = Path(__file__).resolve().parent / "uploads"
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
     app.include_router(health_router)
     app.include_router(auth_router)

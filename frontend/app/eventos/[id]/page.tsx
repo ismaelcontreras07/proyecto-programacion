@@ -3,12 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Clock3, MapPin, Ticket, GraduationCap } from "lucide-react";
 import EventRegistrationAction from "../../../components/events/EventRegistrationAction";
-import { EVENTS, getEventById } from "../../../lib/events";
+import { resolveEventImageSrc, type EventDetail } from "../../../lib/api";
 import "./event-detail.css";
 
 type EventDetailPageProps = {
   params: Promise<{ id: string }>;
 };
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 function formatDate(date: string, options?: Intl.DateTimeFormatOptions) {
   const parsedDate = new Date(date);
@@ -28,15 +30,20 @@ function getAvailabilityLabel(spots: number) {
   return "Registro abierto";
 }
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return EVENTS.map((event) => ({ id: event.id }));
+async function fetchEvent(eventId: string): Promise<EventDetail | null> {
+  const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, { cache: "no-store" });
+  if (response.status === 404) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Unable to load event (${response.status})`);
+  }
+  return (await response.json()) as EventDetail;
 }
 
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   const { id } = await params;
-  const event = getEventById(id);
+  const event = await fetchEvent(id);
 
   if (!event) {
     notFound();
@@ -55,7 +62,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         <article className="event-detail-hero">
           <div className="event-detail-image-wrap">
             <Image
-              src={event.image}
+              src={resolveEventImageSrc(event.image)}
               alt={event.name}
               fill
               className="event-detail-image"

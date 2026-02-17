@@ -10,6 +10,8 @@ backend/.venv/
 env/
 backend/env/
 backend/.env
+backend/*.db
+backend/uploads/
 
 # Node.js
 frontend/node_modules/

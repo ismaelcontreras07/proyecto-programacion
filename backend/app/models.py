@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import Enum
+import re
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -20,21 +21,28 @@ class RegistrationStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
+STUDENT_ID_REGEX = re.compile(r"^[A-Z0-9]{8}-[A-Z0-9]{2}$")
+
+
+def _normalize_student_id(value: str) -> str:
+    normalized = value.strip().upper()
+    if not STUDENT_ID_REGEX.fullmatch(normalized):
+        raise ValueError("Student ID must match XXXXXXXX-XX")
+    return normalized
+
+
 class UserRecord(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     id: str
     username: str
     full_name: str
-    email: str
     role: Role
     password_hash: str
     is_active: bool = True
-    student_id: str | None = None
+    student_id: str
     career: str | None = None
     semester: int | None = None
-    phone: str | None = None
-    phone_verified: bool = False
     created_at: datetime
 
 
@@ -44,23 +52,20 @@ class UserPublic(BaseModel):
     id: str
     username: str
     full_name: str
-    email: str
     role: Role
-    student_id: str | None = None
+    student_id: str
     career: str | None = None
     semester: int | None = None
-    phone: str | None = None
-    phone_verified: bool = False
 
 
 class LoginRequest(BaseModel):
-    identifier: str = Field(min_length=3, max_length=254)
+    student_id: str = Field(min_length=3, max_length=40)
     password: str = Field(min_length=3, max_length=128)
 
-    @field_validator("identifier")
+    @field_validator("student_id")
     @classmethod
-    def normalize_identifier(cls, value: str) -> str:
-        return value.strip().lower()
+    def normalize_student_id(cls, value: str) -> str:
+        return _normalize_student_id(value)
 
 
 class LoginResponse(BaseModel):
@@ -114,6 +119,42 @@ class EventDetail(EventSummary):
     requirements: list[str]
 
 
+class EventMutationBase(BaseModel):
+    image: str = Field(min_length=1, max_length=255)
+    name: str = Field(min_length=3, max_length=255)
+    date: date
+    time: str = Field(min_length=1, max_length=80)
+    place: str = Field(min_length=1, max_length=180)
+    location: str = Field(min_length=3, max_length=600)
+    spots: int = Field(ge=0, le=50000)
+    type: EventType
+    summary: str = Field(min_length=10, max_length=2000)
+    agenda: list[str] = Field(default_factory=list)
+    requirements: list[str] = Field(default_factory=list)
+
+    @field_validator("image", "name", "time", "place", "location", "summary")
+    @classmethod
+    def normalize_text_fields(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("agenda", "requirements")
+    @classmethod
+    def normalize_text_lists(cls, value: list[str]) -> list[str]:
+        return [item.strip() for item in value if item.strip()]
+
+
+class EventCreateRequest(EventMutationBase):
+    pass
+
+
+class EventUpdateRequest(EventMutationBase):
+    pass
+
+
+class EventImageUploadResponse(BaseModel):
+    image_url: str
+
+
 class RegistrationRecord(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
@@ -121,10 +162,8 @@ class RegistrationRecord(BaseModel):
     event_id: str
     full_name: str
     student_id: str
-    email: str
     career: str
     semester: int = Field(ge=1, le=12)
-    phone: str
     status: RegistrationStatus
     created_at: datetime
 
@@ -132,20 +171,15 @@ class RegistrationRecord(BaseModel):
 class UserRegistrationData(BaseModel):
     full_name: str = Field(min_length=3, max_length=120)
     student_id: str = Field(min_length=3, max_length=40)
-    email: str = Field(min_length=6, max_length=254)
     career: str = Field(min_length=3, max_length=120)
     semester: int = Field(ge=1, le=12)
-    phone: str = Field(min_length=8, max_length=20)
 
-    @field_validator("email")
+    @field_validator("student_id")
     @classmethod
-    def validate_email(cls, value: str) -> str:
-        normalized = value.strip().lower()
-        if "@" not in normalized or "." not in normalized.split("@")[-1]:
-            raise ValueError("Invalid email format")
-        return normalized
+    def normalize_student_id(cls, value: str) -> str:
+        return _normalize_student_id(value)
 
-    @field_validator("full_name", "student_id", "career", "phone")
+    @field_validator("full_name", "career")
     @classmethod
     def normalize_strings(cls, value: str) -> str:
         return value.strip()
@@ -166,46 +200,28 @@ class RegistrationPublic(BaseModel):
     event_id: str
     full_name: str
     student_id: str
-    email: str
     career: str
     semester: int
-    phone: str
     status: RegistrationStatus
     created_at: datetime
 
 
+class UserEventRegistration(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    registration_id: str
+    event_id: str
+    status: RegistrationStatus
+    registered_at: datetime
+    event: EventSummary
+
+
 class SignUpRequest(UserRegistrationData):
-    pass
+    password: str = Field(min_length=3, max_length=128)
 
-
-class PendingSmsVerification(BaseModel):
-    id: str
-    code: str
-    full_name: str
-    student_id: str
-    email: str
-    career: str
-    semester: int
-    phone: str
-    expires_at: datetime
-    attempts: int = 0
-
-
-class SignUpResponse(BaseModel):
-    verification_id: str
-    expires_in_seconds: int
-    sms_destination: str
-    dev_sms_code: str | None = None
-    message: str
-
-
-class VerifySmsRequest(BaseModel):
-    verification_id: str = Field(min_length=8, max_length=80)
-    code: str = Field(min_length=4, max_length=8)
-
-    @field_validator("verification_id", "code")
+    @field_validator("password")
     @classmethod
-    def normalize_inputs(cls, value: str) -> str:
+    def normalize_password(cls, value: str) -> str:
         return value.strip()
 
 

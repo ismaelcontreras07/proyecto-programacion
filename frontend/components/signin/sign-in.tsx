@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff, MessageSquareMore, ShieldCheck } from "lucide-react";
+import { ArrowLeftIcon, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import "./signin.css";
 
 export interface Testimonial {
@@ -14,30 +14,30 @@ export interface Testimonial {
 }
 
 export interface SignInPayload {
-  identifier: string;
+  studentId: string;
   password: string;
 }
 
 export interface SignUpPayload {
   fullName: string;
   studentId: string;
-  email: string;
+  password: string;
   career: string;
   semester: number;
-  phone: string;
 }
 
-export interface SignUpStartResult {
-  verificationId: string;
-  smsDestination: string;
-  devSmsCode?: string | null;
-  message: string;
-}
-
-export interface VerifySmsPayload {
-  verificationId: string;
-  code: string;
-}
+const carreras = [
+  "Sistemas Computacionales",
+  "Comercio Internacional",
+  "Administración",
+  "Contabilidad",
+  "Derecho",
+  "Turismo",
+  "Psicología",
+  "Idiomas",
+  "Mercadotecnia",
+  "Comunicación"
+];
 
 interface SignInPageProps {
   title?: React.ReactNode;
@@ -45,15 +45,20 @@ interface SignInPageProps {
   heroImageSrc?: string;
   testimonials?: Testimonial[];
   onSignIn: (payload: SignInPayload) => Promise<void>;
-  onSignUp: (payload: SignUpPayload) => Promise<SignUpStartResult>;
-  onVerifySms: (payload: VerifySmsPayload) => Promise<void>;
+  onSignUp: (payload: SignUpPayload) => Promise<void>;
 }
 
-type AuthMode = "signin" | "signup" | "verify";
+type AuthMode = "signin" | "signup";
 
 const InputShell = ({ children }: { children: React.ReactNode }) => (
   <div className="signin-input-shell">{children}</div>
 );
+
+const formatStudentIdInput = (value: string): string => {
+  const compact = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
+  if (compact.length <= 8) return compact;
+  return `${compact.slice(0, 8)}-${compact.slice(8)}`;
+};
 
 const TestimonialCard = ({ testimonial, index }: { testimonial: Testimonial; index: number }) => (
   <div className="signin-testimonial-card" style={{ animationDelay: `${index * 0.14}s` }}>
@@ -79,7 +84,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   testimonials = [],
   onSignIn,
   onSignUp,
-  onVerifySms,
 }) => {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [isLoading, setIsLoading] = useState(false);
@@ -88,33 +92,25 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const [showPassword, setShowPassword] = useState(false);
 
   const [signInForm, setSignInForm] = useState<SignInPayload>({
-    identifier: "",
+    studentId: "",
     password: "",
   });
 
   const [signUpForm, setSignUpForm] = useState<SignUpPayload>({
     fullName: "",
     studentId: "",
-    email: "",
+    password: "",
     career: "",
     semester: 1,
-    phone: "",
   });
-
-  const [pendingVerificationId, setPendingVerificationId] = useState("");
-  const [smsDestination, setSmsDestination] = useState("");
-  const [devSmsCode, setDevSmsCode] = useState<string | null>(null);
-  const [verificationCode, setVerificationCode] = useState("");
 
   const isSignInMode = mode === "signin";
   const isSignUpMode = mode === "signup";
-  const isVerifyMode = mode === "verify";
 
   const modeTitle = useMemo(() => {
     if (isSignInMode) return "Iniciar sesión";
-    if (isSignUpMode) return "Crear cuenta";
-    return "Verificar SMS";
-  }, [isSignInMode, isSignUpMode]);
+    return "Crear cuenta";
+  }, [isSignInMode]);
 
   const submitSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -138,32 +134,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     setInfoMessage("");
 
     try {
-      const response = await onSignUp(signUpForm);
-      setPendingVerificationId(response.verificationId);
-      setSmsDestination(response.smsDestination);
-      setDevSmsCode(response.devSmsCode ?? null);
-      setInfoMessage(response.message);
-      setMode("verify");
+      await onSignUp(signUpForm);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "No se pudo crear la cuenta");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const submitSmsVerification = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsLoading(true);
-    setErrorMessage("");
-    setInfoMessage("");
-
-    try {
-      await onVerifySms({
-        verificationId: pendingVerificationId,
-        code: verificationCode,
-      });
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "No se pudo verificar el código");
     } finally {
       setIsLoading(false);
     }
@@ -174,6 +147,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       <section className="signin-panel">
         <div className="signin-card">
           <Link href="/" className="signin-home-link">
+            <ArrowLeftIcon size={16} />
             Volver a la página principal
           </Link>
 
@@ -213,17 +187,25 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           {isSignInMode && (
             <form className="signin-form-single" onSubmit={submitSignIn}>
               <div className="signin-field">
-                <label>Correo o usuario</label>
+                <label>Matrícula</label>
                 <InputShell>
                   <input
-                    name="identifier"
+                    name="studentId"
                     type="text"
-                    value={signInForm.identifier}
-                    onChange={(event) => setSignInForm((prev) => ({ ...prev, identifier: event.target.value }))}
-                    placeholder="tu.correo@alumno.unimex.edu.mx"
+                    value={signInForm.studentId}
+                    onChange={(event) =>
+                      setSignInForm((prev) => ({ ...prev, studentId: formatStudentIdInput(event.target.value) }))
+                    }
+                    placeholder="Ej. ABCD1234-56"
+                    pattern="[A-Za-z0-9]{8}-[A-Za-z0-9]{2}"
+                    title="La matrícula debe tener formato XXXXXXXX-XX"
+                    maxLength={11}
+                    autoComplete="username"
+                    spellCheck={false}
                     required
                   />
                 </InputShell>
+                <p className="signin-field-hint">Formato requerido: XXXXXXXX-XX</p>
               </div>
 
               <div className="signin-field">
@@ -236,6 +218,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       value={signInForm.password}
                       onChange={(event) => setSignInForm((prev) => ({ ...prev, password: event.target.value }))}
                       placeholder="Ingresa tu contraseña"
+                      autoComplete="current-password"
                       required
                     />
                     <button
@@ -265,6 +248,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                     value={signUpForm.fullName}
                     onChange={(event) => setSignUpForm((prev) => ({ ...prev, fullName: event.target.value }))}
                     placeholder="Ej. Ana Gómez Pérez"
+                    autoComplete="name"
                     required
                   />
                 </InputShell>
@@ -276,49 +260,58 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   <input
                     type="text"
                     value={signUpForm.studentId}
-                    onChange={(event) => setSignUpForm((prev) => ({ ...prev, studentId: event.target.value }))}
-                    placeholder="Ej. A01234567"
+                    onChange={(event) =>
+                      setSignUpForm((prev) => ({ ...prev, studentId: formatStudentIdInput(event.target.value) }))
+                    }
+                    placeholder="Ej. ABCD1234-56"
+                    pattern="[A-Za-z0-9]{8}-[A-Za-z0-9]{2}"
+                    title="La matrícula debe tener formato XXXXXXXX-XX"
+                    maxLength={11}
+                    autoComplete="username"
+                    spellCheck={false}
                     required
                   />
                 </InputShell>
+                <p className="signin-field-hint">Formato requerido: XXXXXXXX-XX</p>
               </div>
-
               <div className="signin-field">
-                <label>Correo institucional</label>
+                <label>Contraseña</label>
                 <InputShell>
-                  <input
-                    type="email"
-                    value={signUpForm.email}
-                    onChange={(event) => setSignUpForm((prev) => ({ ...prev, email: event.target.value }))}
-                    placeholder="tu.nombre@alumno.unimex.edu.mx"
-                    required
-                  />
-                </InputShell>
-              </div>
-
-              <div className="signin-field">
-                <label>Teléfono celular</label>
-                <InputShell>
-                  <input
-                    type="tel"
-                    value={signUpForm.phone}
-                    onChange={(event) => setSignUpForm((prev) => ({ ...prev, phone: event.target.value }))}
-                    placeholder="Ej. 5512345678"
-                    required
-                  />
+                  <div className="signin-password-wrap">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={signUpForm.password}
+                      onChange={(event) => setSignUpForm((prev) => ({ ...prev, password: event.target.value }))}
+                      placeholder="Crea una contraseña"
+                      autoComplete="new-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="signin-password-toggle"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </InputShell>
               </div>
 
               <div className="signin-field">
                 <label>Carrera</label>
                 <InputShell>
-                  <input
-                    type="text"
+                  <select
                     value={signUpForm.career}
                     onChange={(event) => setSignUpForm((prev) => ({ ...prev, career: event.target.value }))}
-                    placeholder="Ej. Ingeniería en Sistemas"
                     required
-                  />
+                  >
+                    <option value="" disabled>Selecciona una carrera</option>
+                    {carreras.map((career) => (
+                      <option key={career} value={career}>
+                        {career}
+                      </option>
+                    ))}
+                  </select>
                 </InputShell>
               </div>
 
@@ -340,69 +333,18 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </div>
 
               <div className="signin-initial-password-note">
-                Contraseña inicial: <strong>tu matrícula</strong>. Podrás iniciar sesión después de validar SMS.
+                Tu cuenta se crea de inmediato. Usa tu matrícula y contraseña para iniciar sesión.
               </div>
 
               <button type="submit" disabled={isLoading} className="signin-submit-btn signin-field-full">
-                {isLoading ? "Enviando SMS..." : "Crear cuenta y enviar SMS"}
-              </button>
-            </form>
-          )}
-
-          {isVerifyMode && (
-            <form className="signin-form-single" onSubmit={submitSmsVerification}>
-              <div className="signin-sms-box">
-                <p className="signin-sms-title">
-                  <MessageSquareMore size={16} />
-                  Verificación SMS
-                </p>
-                <p>
-                  Enviamos un código a: <strong>{smsDestination}</strong>
-                </p>
-                {devSmsCode && (
-                  <p className="signin-dev-code">
-                    Código de prueba: <strong>{devSmsCode}</strong>
-                  </p>
-                )}
-              </div>
-
-              <div className="signin-field">
-                <label>Código de verificación</label>
-                <InputShell>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={verificationCode}
-                    onChange={(event) => setVerificationCode(event.target.value)}
-                    placeholder="000000"
-                    maxLength={6}
-                    required
-                  />
-                </InputShell>
-              </div>
-
-              <button type="submit" disabled={isLoading} className="signin-submit-btn">
-                {isLoading ? "Verificando..." : "Verificar y entrar"}
-              </button>
-
-              <button
-                type="button"
-                className="signin-secondary-btn"
-                onClick={() => {
-                  setMode("signup");
-                  setVerificationCode("");
-                  setInfoMessage("");
-                  setErrorMessage("");
-                }}
-              >
-                Cambiar datos de registro
+                {isLoading ? "Creando cuenta..." : "Crear cuenta"}
               </button>
             </form>
           )}
 
           <p className="signin-security-note">
             <ShieldCheck size={16} />
-            Acceso protegido con validación de SMS.
+            Acceso protegido con matrícula y contraseña.
           </p>
         </div>
       </section>
@@ -422,4 +364,3 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     </div>
   );
 };
-

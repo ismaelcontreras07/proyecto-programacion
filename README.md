@@ -2,7 +2,7 @@
 
 Plataforma web de eventos con:
 - Frontend en Next.js (catálogo, detalle de evento, registro y auth UI).
-- Backend en FastAPI (auth, registro de cuenta con SMS simulado, eventos y registros), listo para conectar DB real.
+- Backend en FastAPI (auth, registro directo de cuenta, eventos y registros), listo para conectar DB real.
 
 ## Prerrequisitos
 - Node.js 20+
@@ -41,18 +41,18 @@ npm run dev
 |---|---|
 | `/Users/chazanet/Documents/proyecto-programacion/backend/main.py` | Punto de entrada FastAPI, CORS y registro de routers. |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/README.md` | Guía técnica del backend y endpoints. |
-| `/Users/chazanet/Documents/proyecto-programacion/backend/schema.sql` | Esquema SQL completo para producción (usuarios, eventos, agenda, requisitos, registros, verificación SMS). |
+| `/Users/chazanet/Documents/proyecto-programacion/backend/schema.sql` | Esquema SQL completo para producción (usuarios, eventos, agenda, requisitos y registros). |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/requirements.txt` | Dependencias Python del backend. |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/__init__.py` | Marca `app/` como paquete Python. |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/models.py` | Modelos Pydantic y contratos de request/response. |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/security.py` | Hash de contraseñas y tokens de acceso firmados. |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/seed_data.py` | Datos semilla de usuarios y eventos para desarrollo. |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/repositories.py` | Repositorio temporal en memoria (replaceable por SQL). |
-| `/Users/chazanet/Documents/proyecto-programacion/backend/app/services.py` | Lógica de negocio (auth, registro SMS, eventos, registros, admin). |
+| `/Users/chazanet/Documents/proyecto-programacion/backend/app/services.py` | Lógica de negocio (auth, registro directo, eventos, registros, admin). |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/dependencies.py` | Inyección de dependencias y guardas de autenticación/rol. |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/routers/__init__.py` | Exporta routers del API. |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/routers/health.py` | Salud del backend y endpoint compat `/api/data`. |
-| `/Users/chazanet/Documents/proyecto-programacion/backend/app/routers/auth.py` | Login, registro, verificación SMS y perfil autenticado. |
+| `/Users/chazanet/Documents/proyecto-programacion/backend/app/routers/auth.py` | Login, registro y perfil autenticado. |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/routers/events.py` | Listado/detalle de eventos y registros por evento (admin). |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/routers/registrations.py` | Alta de registros de alumnos a eventos. |
 | `/Users/chazanet/Documents/proyecto-programacion/backend/app/routers/admin.py` | Métricas resumidas para panel administrativo. |
@@ -82,13 +82,16 @@ npm run dev
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/favicon.ico` | Favicon de la app. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/login/page.tsx` | Pantalla de acceso/registro conectada al backend. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/login/login.css` | Estilos legacy del login anterior. |
-| `/Users/chazanet/Documents/proyecto-programacion/frontend/app/contacto/page.tsx` | Página de contacto. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/privacidad/page.tsx` | Página de privacidad. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/privacidad/privacy.css` | Estilos de la página de privacidad. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/admin/layout.tsx` | Guardia de acceso admin para rutas administrativas. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/admin/page.tsx` | Página principal del módulo admin. |
+| `/Users/chazanet/Documents/proyecto-programacion/frontend/app/admin/admin.css` | Estilos del panel de gestión de eventos admin. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/dashboard/layout.tsx` | Guardia de acceso admin para dashboard. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/dashboard/page.tsx` | Página dashboard. |
+| `/Users/chazanet/Documents/proyecto-programacion/frontend/app/dashboard/dashboard.css` | Estilos del dashboard admin. |
+| `/Users/chazanet/Documents/proyecto-programacion/frontend/app/mis-eventos/page.tsx` | Vista de eventos registrados por el alumno autenticado. |
+| `/Users/chazanet/Documents/proyecto-programacion/frontend/app/mis-eventos/registrations.css` | Estilos de la vista de mis eventos. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/eventos/[id]/page.tsx` | Detalle dinámico de evento con información completa y registro. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/app/eventos/[id]/event-detail.css` | Estilos de la vista de detalle de evento. |
 
@@ -97,8 +100,9 @@ npm run dev
 | Archivo | Descripción |
 |---|---|
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/context/AuthContext.tsx` | Estado de sesión en cliente (`accessToken` + usuario). |
+| `/Users/chazanet/Documents/proyecto-programacion/frontend/lib/api.ts` | Tipos y helpers para consumir el backend (eventos, registros y admin). |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/lib/utils.ts` | Utilidades generales del frontend. |
-| `/Users/chazanet/Documents/proyecto-programacion/frontend/lib/events.ts` | Catálogo local de eventos usado por vistas del frontend. |
+| `/Users/chazanet/Documents/proyecto-programacion/frontend/lib/events.ts` | Catálogo local de respaldo de eventos (seed visual). |
 
 #### Componentes UI/base
 
@@ -111,7 +115,7 @@ npm run dev
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/components/ui/Button.tsx` | Botón reutilizable (button/link). |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/components/ui/button.css` | Estilos de `Button`. |
 | `/Users/chazanet/Documents/proyecto-programacion/frontend/components/ui/SplitText.tsx` | Componente de texto animado con GSAP. |
-| `/Users/chazanet/Documents/proyecto-programacion/frontend/components/signin/sign-in.tsx` | Componente principal de auth (login, registro y verificación SMS). |
+| `/Users/chazanet/Documents/proyecto-programacion/frontend/components/signin/sign-in.tsx` | Componente principal de auth (login y registro). |
 
 #### Componentes de hero/footer/contacto
 
@@ -160,13 +164,17 @@ npm run dev
 ## Endpoints backend clave
 - `POST /api/auth/login`
 - `POST /api/auth/register`
-- `POST /api/auth/verify-sms`
 - `GET /api/auth/me`
 - `GET /api/events`
 - `GET /api/events/{event_id}`
+- `POST /api/events/upload-image` (admin, multipart/form-data)
+- `POST /api/events` (admin)
+- `PUT /api/events/{event_id}` (admin)
+- `DELETE /api/events/{event_id}` (admin)
 - `POST /api/registrations`
+- `GET /api/registrations/me`
 - `GET /api/events/{event_id}/registrations` (admin)
 - `GET /api/admin/summary` (admin)
 - `GET /api/health`
 
-Nota de auth: en registro se solicitan los mismos datos del registro a evento; después de validar SMS, la contraseña inicial es la matrícula (`student_id`).
+Nota de auth: el registro pide nombre, matrícula, contraseña, carrera y cuatrimestre. La matrícula debe cumplir formato `XXXXXXXX-XX`.

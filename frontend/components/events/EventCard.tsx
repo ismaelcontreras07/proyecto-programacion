@@ -1,21 +1,21 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, Clock3, MapPin, Ticket, ArrowRight } from "lucide-react";
-import type { EventData } from "../../lib/events";
+import { Calendar, Clock3, MapPin, Users, ArrowRight } from "lucide-react";
+import { resolveEventImageSrc, type EventSummary } from "../../lib/api";
 import "./event-card.css";
 
 interface EventCardProps {
-    event: EventData;
+    event: EventSummary;
 }
 
 export default function EventCard({ event }: EventCardProps) {
-    const getTypeBadgeClass = (type: EventData["type"]) => {
+    const getTypeBadgeClass = (type: EventSummary["type"]) => {
         return type === "Presencial" ? "badge-onsite" : "badge-online";
     };
 
     const getAvailability = (spots: number) => {
-        if (spots <= 20) return { label: "Ultimos lugares", className: "availability-critical" };
+        if (spots <= 20) return { label: "Últimos lugares", className: "availability-critical" };
         if (spots <= 80) return { label: "Alta demanda", className: "availability-warning" };
         return { label: "Disponible", className: "availability-ok" };
     };
@@ -34,12 +34,13 @@ export default function EventCard({ event }: EventCardProps) {
 
     const availability = getAvailability(event.spots);
     const isLowSpots = event.spots <= 20;
+    const summary = event.summary?.trim() || "Evento académico y profesional para impulsar tu perfil.";
 
     return (
-        <div className="event-card group">
+        <article className="event-card">
             <div className="event-image-container">
                 <Image
-                    src={event.image}
+                    src={resolveEventImageSrc(event.image)}
                     alt={event.name}
                     fill
                     className="event-image"
@@ -66,6 +67,7 @@ export default function EventCard({ event }: EventCardProps) {
                 <div className="event-header">
                     <h3 className="event-title">{event.name}</h3>
                     <p className="event-subtitle">{event.place}</p>
+                    <p className="event-summary truncate-2-lines">{summary}</p>
                 </div>
 
                 <div className="event-details-grid">
@@ -86,7 +88,7 @@ export default function EventCard({ event }: EventCardProps) {
                     <div className="event-detail-card event-detail-card-full">
                         <MapPin className="event-detail-icon" />
                         <div className="event-detail-copy">
-                            <span className="event-detail-label">Ubicacion</span>
+                            <span className="event-detail-label">Ubicación</span>
                             <span className="event-detail-value truncate-2-lines">{event.location}</span>
                         </div>
                     </div>
@@ -94,7 +96,7 @@ export default function EventCard({ event }: EventCardProps) {
 
                 <div className="event-footer">
                     <div className="event-spots">
-                        <Ticket className="event-detail-icon" />
+                        <Users className="event-detail-icon" />
                         <div className="event-detail-copy">
                             <span className="spots-label">Cupos disponibles</span>
                             <span className={`spots-count ${isLowSpots ? "spots-low" : ""}`}>
@@ -104,11 +106,11 @@ export default function EventCard({ event }: EventCardProps) {
                     </div>
 
                     <Link href={`/eventos/${event.id}`} className="event-cta">
-                        Ver detalles
+                        Ver evento
                         <ArrowRight className="event-cta-icon" />
                     </Link>
                 </div>
             </div>
-        </div>
+        </article>
     );
 }

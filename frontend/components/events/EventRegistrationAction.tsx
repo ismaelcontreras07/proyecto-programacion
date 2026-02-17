@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, LogIn, Ticket } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { parseApiError } from "../../lib/api";
 
 interface EventRegistrationActionProps {
   eventId: string;
@@ -12,17 +13,8 @@ interface EventRegistrationActionProps {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
-async function parseApiError(response: Response): Promise<string> {
-  try {
-    const payload = (await response.json()) as { detail?: string };
-    return payload.detail ?? "No se pudo completar el registro";
-  } catch {
-    return "No se pudo completar el registro";
-  }
-}
-
 export default function EventRegistrationAction({ eventId, eventName }: EventRegistrationActionProps) {
-  const { isAuthenticated, isLoading, accessToken } = useAuth();
+  const { isAuthenticated, isLoading, accessToken, user } = useAuth();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -36,6 +28,11 @@ export default function EventRegistrationAction({ eventId, eventName }: EventReg
 
     if (!isAuthenticated || !accessToken) {
       router.push("/login");
+      return;
+    }
+
+    if (user?.role !== "user") {
+      setErrorMessage("Solo cuentas de alumno pueden registrarse a eventos.");
       return;
     }
 
@@ -79,11 +76,13 @@ export default function EventRegistrationAction({ eventId, eventName }: EventReg
       {successMessage && <p className="event-detail-register-success">{successMessage}</p>}
 
       <div className="event-detail-register-actions">
-        {isAuthenticated ? (
+        {isAuthenticated && user?.role === "user" ? (
           <button type="button" onClick={handleRegister} className="event-detail-register-btn" disabled={submitting}>
             <Ticket size={16} />
             {submitting ? "Registrando..." : "Registrarme al evento"}
           </button>
+        ) : isAuthenticated ? (
+          <p className="event-detail-register-note">Tu sesión no corresponde a un alumno.</p>
         ) : (
           <button
             type="button"
@@ -105,4 +104,3 @@ export default function EventRegistrationAction({ eventId, eventName }: EventReg
     </article>
   );
 }
-
