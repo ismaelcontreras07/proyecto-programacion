@@ -10,11 +10,35 @@ SCHEMA_PATH = BACKEND_DIR / "schema.sql"
 DEFAULT_DB_PATH = BACKEND_DIR / "unimex.db"
 
 
+def _looks_like_posix_absolute(path_str: str) -> bool:
+    # Ej: "/Users/..." o "/home/..."
+    return path_str.startswith("/")
+
+
+def _is_windows() -> bool:
+    return os.name == "nt"
+
+
 def get_db_path() -> Path:
-    configured = os.getenv("APP_DB_PATH")
-    if configured:
-        return Path(configured).expanduser()
-    return DEFAULT_DB_PATH
+    configured = os.getenv("APP_DB_PATH", "").strip()
+
+    # ✅ Si no está configurado, usamos una ruta portable dentro del proyecto
+    if not configured:
+        return DEFAULT_DB_PATH
+
+    # ✅ Si estamos en Windows y nos pasaron una ruta estilo Mac/Linux ("/Users/..."),
+    # ignoramos esa config para evitar errores de permisos/ruta inexistente.
+    if _is_windows() and _looks_like_posix_absolute(configured):
+        return DEFAULT_DB_PATH
+
+    # ✅ Expandimos "~" si existiera y resolvemos a Path
+    p = Path(configured).expanduser()
+
+    # ✅ Si es relativo, lo hacemos relativo al backend para que sea portable
+    if not p.is_absolute():
+        p = (BACKEND_DIR / p).resolve()
+
+    return p
 
 
 def _schema_for_sqlite(raw_schema: str) -> str:

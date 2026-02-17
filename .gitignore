@@ -6,7 +6,6 @@ __pycache__/
 *.so
 .Python
 
-
 # Node.js
 frontend/node_modules/
 frontend/.next/
