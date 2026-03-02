@@ -13,3 +13,5 @@ frontend/out/
 frontend/build/
 .DS_Store
 *.log
+*.db
+backend/unimex_eventos.db
