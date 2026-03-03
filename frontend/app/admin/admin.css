@@ -51,6 +51,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
+  width: 100%;
 }
 
 @media (min-width: 980px) {
@@ -64,6 +65,7 @@
   border: 1px solid #deebf7;
   border-radius: 0.85rem;
   padding: 1rem;
+  width: 100%;
 }
 
 .admin-panel h2 {
@@ -129,6 +131,7 @@
   font-size: 0.92rem;
   color: #123454;
   background: #fff;
+  width: 100%;
 }
 
 .admin-form textarea {

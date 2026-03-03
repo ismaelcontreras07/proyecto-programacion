@@ -1,4 +1,5 @@
 const ISO_DATE_ONLY_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
+const ISO_DATETIME_WITHOUT_TIMEZONE_REGEX = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?$/;
 const TIME_TOKEN_REGEX = /(\d{1,2}:\d{2}\s*(?:[ap]\.?m\.?)?)/gi;
 const TIME_INPUT_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
@@ -113,7 +114,13 @@ export function parseDateValue(value: string): Date | null {
     return parsed;
   }
 
-  const parsed = new Date(trimmed);
+  // Backend stores timestamps in UTC without timezone suffix (e.g. "2026-03-03 01:29:00").
+  // Treat those as UTC to avoid day drift when rendering in local timezone.
+  const normalized = ISO_DATETIME_WITHOUT_TIMEZONE_REGEX.test(trimmed)
+    ? `${trimmed.replace(" ", "T")}Z`
+    : trimmed;
+
+  const parsed = new Date(normalized);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed;
 }
