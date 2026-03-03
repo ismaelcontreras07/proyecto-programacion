@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Calendar, Clock3, MapPin, Users, ArrowRight } from "lucide-react";
 import { resolveEventImageSrc, type EventSummary } from "../../lib/api";
+import { formatEventDate, normalizeEventTimeLabel } from "../../lib/datetime";
 import "./event-card.css";
 
 interface EventCardProps {
@@ -14,25 +15,14 @@ export default function EventCard({ event }: EventCardProps) {
         return type === "Presencial" ? "badge-onsite" : "badge-online";
     };
 
-    const getAvailability = (spots: number) => {
+    const getAvailability = (spots: number, lifecycle: EventSummary["lifecycle"]) => {
+        if (lifecycle === "past") return { label: "Evento pasado", className: "availability-past" };
         if (spots <= 20) return { label: "Últimos lugares", className: "availability-critical" };
         if (spots <= 80) return { label: "Alta demanda", className: "availability-warning" };
         return { label: "Disponible", className: "availability-ok" };
     };
 
-    const formatDate = (date: string, options?: Intl.DateTimeFormatOptions) => {
-        const parsedDate = new Date(date);
-        if (Number.isNaN(parsedDate.getTime())) return date;
-
-        return parsedDate.toLocaleDateString("es-MX", options ?? {
-            weekday: "short",
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-        });
-    };
-
-    const availability = getAvailability(event.spots);
+    const availability = getAvailability(event.spots, event.lifecycle);
     const isLowSpots = event.spots <= 20;
     const summary = event.summary?.trim() || "Evento académico y profesional para impulsar tu perfil.";
 
@@ -59,7 +49,7 @@ export default function EventCard({ event }: EventCardProps) {
 
                 <div className="event-date-chip">
                     <Calendar className="event-date-chip-icon" />
-                    <span>{formatDate(event.date, { day: "2-digit", month: "short" })}</span>
+                    <span>{formatEventDate(event.date)}</span>
                 </div>
             </div>
 
@@ -75,14 +65,14 @@ export default function EventCard({ event }: EventCardProps) {
                         <Calendar className="event-detail-icon" />
                         <div className="event-detail-copy">
                             <span className="event-detail-label">Fecha</span>
-                            <span className="event-detail-value">{formatDate(event.date)}</span>
+                            <span className="event-detail-value">{formatEventDate(event.date)}</span>
                         </div>
                     </div>
                     <div className="event-detail-card">
                         <Clock3 className="event-detail-icon" />
                         <div className="event-detail-copy">
                             <span className="event-detail-label">Horario</span>
-                            <span className="event-detail-value">{event.time}</span>
+                            <span className="event-detail-value">{normalizeEventTimeLabel(event.time)}</span>
                         </div>
                     </div>
                     <div className="event-detail-card event-detail-card-full">
@@ -100,7 +90,7 @@ export default function EventCard({ event }: EventCardProps) {
                         <div className="event-detail-copy">
                             <span className="spots-label">Cupos disponibles</span>
                             <span className={`spots-count ${isLowSpots ? "spots-low" : ""}`}>
-                                {event.spots}
+                                {event.lifecycle === "past" ? "Finalizado" : event.spots}
                             </span>
                         </div>
                     </div>

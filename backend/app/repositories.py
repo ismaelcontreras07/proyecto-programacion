@@ -7,7 +7,7 @@ from threading import Lock
 from uuid import uuid4
 
 from .database import get_connection, get_db_path
-from .models import EventRecord, EventType, RegistrationRecord, UserRecord
+from .models import EventRecord, EventReviewRecord, EventType, RegistrationRecord, UserRecord
 
 
 def _to_datetime(value: str | datetime) -> datetime:
@@ -38,6 +38,7 @@ class InMemoryStore:
         self._users_by_student_id = {user.student_id.casefold(): user.model_copy(deep=True) for user in users}
         self._events_by_id = {event.id: event.model_copy(deep=True) for event in events}
         self._registrations_by_id: dict[str, RegistrationRecord] = {}
+        self._reviews_by_id: dict[str, EventReviewRecord] = {}
 
     def list_users(self) -> list[UserRecord]:
         return [user.model_copy(deep=True) for user in self._users_by_id.values()]
@@ -103,6 +104,11 @@ class InMemoryStore:
                 for registration_id, registration in self._registrations_by_id.items()
                 if registration.event_id != event_id
             }
+            self._reviews_by_id = {
+                review_id: review
+                for review_id, review in self._reviews_by_id.items()
+                if review.event_id != event_id
+            }
             return True
 
     def create_registration(self, registration: RegistrationRecord) -> RegistrationRecord:
@@ -160,6 +166,44 @@ class InMemoryStore:
 
     def count_registrations_created_since(self, since: datetime) -> int:
         return sum(1 for registration in self._registrations_by_id.values() if registration.created_at >= since)
+
+    def create_review(self, review: EventReviewRecord) -> EventReviewRecord:
+        with self._lock:
+            saved_review = review.model_copy(deep=True)
+            self._reviews_by_id[saved_review.id] = saved_review
+            return saved_review.model_copy(deep=True)
+
+    def update_review(self, review: EventReviewRecord) -> EventReviewRecord:
+        with self._lock:
+            if review.id not in self._reviews_by_id:
+                raise KeyError(review.id)
+            saved_review = review.model_copy(deep=True)
+            self._reviews_by_id[saved_review.id] = saved_review
+            return saved_review.model_copy(deep=True)
+
+    def generate_review_id(self) -> str:
+        return f"rev_{uuid4().hex[:16]}"
+
+    def get_review_by_event_and_student(self, event_id: str, student_id: str) -> EventReviewRecord | None:
+        student_key = student_id.casefold()
+        for review in self._reviews_by_id.values():
+            if review.event_id == event_id and review.student_id.casefold() == student_key:
+                return review.model_copy(deep=True)
+        return None
+
+    def list_reviews(
+        self,
+        event_id: str | None = None,
+        student_id: str | None = None,
+    ) -> list[EventReviewRecord]:
+        records = list(self._reviews_by_id.values())
+        if event_id is not None:
+            records = [record for record in records if record.event_id == event_id]
+        if student_id is not None:
+            student_key = student_id.casefold()
+            records = [record for record in records if record.student_id.casefold() == student_key]
+        records.sort(key=lambda item: (item.updated_at, item.created_at), reverse=True)
+        return [record.model_copy(deep=True) for record in records]
 
 
 class SqliteStore:
@@ -226,6 +270,19 @@ class SqliteStore:
             semester=row["semester"],
             status=row["status"],
             created_at=_to_datetime(row["created_at"]),
+        )
+
+    @staticmethod
+    def _row_to_review(row) -> EventReviewRecord:
+        return EventReviewRecord(
+            id=row["id"],
+            event_id=row["event_id"],
+            student_id=row["student_id"],
+            full_name=row["full_name"],
+            rating=row["rating"],
+            comment=row["comment"],
+            created_at=_to_datetime(row["created_at"]),
+            updated_at=_to_datetime(row["updated_at"]),
         )
 
     @staticmethod
@@ -731,3 +788,96 @@ class SqliteStore:
                 (self._format_datetime(since),),
             ).fetchone()
         return int(row["total"])
+
+    def create_review(self, review: EventReviewRecord) -> EventReviewRecord:
+        with self._lock:
+            with self._conn() as connection:
+                created_at = self._format_datetime(review.created_at)
+                updated_at = self._format_datetime(review.updated_at)
+                connection.execute(
+                    """
+                    INSERT INTO event_reviews (
+                        id, event_id, student_id, full_name, rating, comment,
+                        created_at, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        review.id,
+                        review.event_id,
+                        review.student_id,
+                        review.full_name,
+                        review.rating,
+                        review.comment,
+                        created_at,
+                        updated_at,
+                    ),
+                )
+                connection.commit()
+        return review.model_copy(deep=True)
+
+    def update_review(self, review: EventReviewRecord) -> EventReviewRecord:
+        with self._lock:
+            with self._conn() as connection:
+                updated_at = self._format_datetime(review.updated_at)
+                updated = connection.execute(
+                    """
+                    UPDATE event_reviews
+                    SET
+                        full_name = ?,
+                        rating = ?,
+                        comment = ?,
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        review.full_name,
+                        review.rating,
+                        review.comment,
+                        updated_at,
+                        review.id,
+                    ),
+                ).rowcount
+                if updated == 0:
+                    raise KeyError(review.id)
+                connection.commit()
+        return review.model_copy(deep=True)
+
+    def generate_review_id(self) -> str:
+        return f"rev_{uuid4().hex[:16]}"
+
+    def get_review_by_event_and_student(self, event_id: str, student_id: str) -> EventReviewRecord | None:
+        with self._conn() as connection:
+            row = connection.execute(
+                """
+                SELECT *
+                FROM event_reviews
+                WHERE event_id = ?
+                  AND LOWER(student_id) = LOWER(?)
+                LIMIT 1
+                """,
+                (event_id, student_id),
+            ).fetchone()
+        return self._row_to_review(row) if row else None
+
+    def list_reviews(
+        self,
+        event_id: str | None = None,
+        student_id: str | None = None,
+    ) -> list[EventReviewRecord]:
+        query = "SELECT * FROM event_reviews"
+        params: list[object] = []
+        conditions: list[str] = []
+        if event_id is not None:
+            conditions.append("event_id = ?")
+            params.append(event_id)
+        if student_id is not None:
+            conditions.append("LOWER(student_id) = LOWER(?)")
+            params.append(student_id)
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        query += " ORDER BY updated_at DESC, created_at DESC"
+
+        with self._conn() as connection:
+            rows = connection.execute(query, tuple(params)).fetchall()
+        return [self._row_to_review(row) for row in rows]

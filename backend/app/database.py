@@ -57,12 +57,34 @@ def _table_has_column(connection: sqlite3.Connection, table_name: str, column_na
 def _drop_all_tables(connection: sqlite3.Connection) -> None:
     connection.executescript(
         """
+        DROP TABLE IF EXISTS event_reviews;
         DROP TABLE IF EXISTS event_registrations;
         DROP TABLE IF EXISTS event_requirements;
         DROP TABLE IF EXISTS event_agenda_items;
         DROP TABLE IF EXISTS auth_sms_verifications;
         DROP TABLE IF EXISTS events;
         DROP TABLE IF EXISTS users;
+        """
+    )
+
+
+def _ensure_event_reviews_table(connection: sqlite3.Connection) -> None:
+    connection.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS event_reviews (
+            id TEXT PRIMARY KEY,
+            event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+            student_id TEXT NOT NULL,
+            full_name TEXT NOT NULL,
+            rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+            comment TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (event_id, student_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_event_reviews_event_id ON event_reviews(event_id);
+        CREATE INDEX IF NOT EXISTS idx_event_reviews_student_id ON event_reviews(student_id);
+        CREATE INDEX IF NOT EXISTS idx_event_reviews_rating ON event_reviews(rating);
         """
     )
 
@@ -109,5 +131,9 @@ def initialize_database(db_path: Path | None = None) -> Path:
             raw_schema = SCHEMA_PATH.read_text(encoding="utf-8")
             sqlite_schema = _schema_for_sqlite(raw_schema)
             connection.executescript(sqlite_schema)
+            connection.commit()
+        else:
+            # Backward-compatible migration for databases created before event reviews existed.
+            _ensure_event_reviews_table(connection)
             connection.commit()
     return target_path

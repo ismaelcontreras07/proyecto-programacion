@@ -1,6 +1,8 @@
 export type Role = "admin" | "user";
 
 export type EventType = "Presencial" | "En línea";
+export type EventLifecycle = "active" | "past";
+export type EventLifecycleFilter = EventLifecycle | "all";
 
 export interface EventSummary {
   id: string;
@@ -13,6 +15,7 @@ export interface EventSummary {
   spots: number;
   type: EventType;
   summary: string;
+  lifecycle: EventLifecycle;
 }
 
 export interface EventDetail extends EventSummary {
@@ -37,6 +40,16 @@ export interface RegistrationPublic {
   semester: number;
   status: "registered" | "cancelled";
   created_at: string;
+}
+
+export interface EventReviewPublic {
+  id: string;
+  event_id: string;
+  full_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AdminSummary {
@@ -66,7 +79,9 @@ export interface EventMutationPayload {
   requirements: string[];
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+export type AdminReportType = "events" | "registrations";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 function toUrl(path: string): string {
   return `${API_BASE_URL}${path}`;
@@ -91,11 +106,13 @@ export async function parseApiError(response: Response): Promise<string> {
 export async function fetchEvents(params?: {
   type?: EventType;
   month?: number;
+  lifecycle?: EventLifecycleFilter;
   signal?: AbortSignal;
 }): Promise<EventSummary[]> {
   const searchParams = new URLSearchParams();
   if (params?.type) searchParams.set("type", params.type);
   if (params?.month) searchParams.set("month", String(params.month));
+  if (params?.lifecycle) searchParams.set("lifecycle", params.lifecycle);
   const query = searchParams.toString();
 
   const response = await fetch(toUrl(`/api/events${query ? `?${query}` : ""}`), {
@@ -123,6 +140,40 @@ export async function fetchEventById(eventId: string, options?: { signal?: Abort
   }
 
   return (await response.json()) as EventDetail;
+}
+
+export async function fetchEventReviews(eventId: string, signal?: AbortSignal): Promise<EventReviewPublic[]> {
+  const response = await fetch(toUrl(`/api/events/${eventId}/reviews`), {
+    cache: "no-store",
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseApiError(response));
+  }
+
+  return (await response.json()) as EventReviewPublic[];
+}
+
+export async function createOrUpdateEventReview(
+  accessToken: string,
+  eventId: string,
+  payload: { rating: number; comment: string },
+): Promise<EventReviewPublic> {
+  const response = await fetch(toUrl(`/api/events/${eventId}/reviews`), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseApiError(response));
+  }
+
+  return (await response.json()) as EventReviewPublic;
 }
 
 export async function fetchMyRegistrations(accessToken: string, signal?: AbortSignal): Promise<UserEventRegistration[]> {
@@ -170,6 +221,52 @@ export async function fetchAdminSummary(accessToken: string, signal?: AbortSigna
   }
 
   return (await response.json()) as AdminSummary;
+}
+
+function getFilenameFromDisposition(disposition: string | null, fallback: string): string {
+  if (!disposition) return fallback;
+
+  const filenameStarMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (filenameStarMatch && filenameStarMatch[1]) {
+    try {
+      return decodeURIComponent(filenameStarMatch[1]);
+    } catch {
+      return filenameStarMatch[1];
+    }
+  }
+
+  const filenameMatch = disposition.match(/filename=\"?([^\";]+)\"?/i);
+  if (filenameMatch && filenameMatch[1]) {
+    return filenameMatch[1];
+  }
+
+  return fallback;
+}
+
+export async function downloadAdminReportCsv(accessToken: string, reportType: AdminReportType): Promise<void> {
+  const response = await fetch(toUrl(`/api/admin/reports/${reportType}.csv`), {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseApiError(response));
+  }
+
+  const blob = await response.blob();
+  const fallbackName = `${reportType}-report.csv`;
+  const filename = getFilenameFromDisposition(response.headers.get("Content-Disposition"), fallbackName);
+
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
 }
 
 export async function createEvent(accessToken: string, payload: EventMutationPayload): Promise<EventDetail> {

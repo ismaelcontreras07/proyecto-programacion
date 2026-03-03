@@ -16,12 +16,24 @@ class EventType(str, Enum):
     ONLINE = "En línea"
 
 
+class EventLifecycle(str, Enum):
+    ACTIVE = "active"
+    PAST = "past"
+
+
+class EventLifecycleFilter(str, Enum):
+    ACTIVE = "active"
+    PAST = "past"
+    ALL = "all"
+
+
 class RegistrationStatus(str, Enum):
     REGISTERED = "registered"
     CANCELLED = "cancelled"
 
 
 STUDENT_ID_REGEX = re.compile(r"^[A-Z0-9]{8}-[A-Z0-9]{2}$")
+TIME_TOKEN_REGEX = re.compile(r"(\d{1,2}:\d{2}\s*(?:[ap]\.?m\.?)?)", re.IGNORECASE)
 
 
 def _normalize_student_id(value: str) -> str:
@@ -29,6 +41,75 @@ def _normalize_student_id(value: str) -> str:
     if not STUDENT_ID_REGEX.fullmatch(normalized):
         raise ValueError("Student ID must match XXXXXXXX-XX")
     return normalized
+
+
+def _normalize_meridiem(token: str) -> tuple[str, str | None]:
+    cleaned = token.strip().lower().replace(" ", "")
+    meridiem: str | None = None
+    if re.search(r"a\.?m\.?$", cleaned):
+        meridiem = "am"
+    elif re.search(r"p\.?m\.?$", cleaned):
+        meridiem = "pm"
+    cleaned = re.sub(r"(a\.?m\.?|p\.?m\.?)$", "", cleaned).replace(".", "")
+    return cleaned, meridiem
+
+
+def _time_token_to_minutes(token: str) -> int | None:
+    normalized, meridiem = _normalize_meridiem(token)
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})", normalized)
+    if not match:
+        return None
+
+    hours = int(match.group(1))
+    minutes = int(match.group(2))
+    if minutes < 0 or minutes > 59:
+        return None
+
+    if meridiem is not None:
+        if hours < 1 or hours > 12:
+            return None
+        if meridiem == "am":
+            hours = 0 if hours == 12 else hours
+        else:
+            hours = 12 if hours == 12 else hours + 12
+    elif hours < 0 or hours > 23:
+        return None
+
+    return (hours * 60) + minutes
+
+
+def _extract_time_window(raw_time: str) -> tuple[int, int] | None:
+    tokens = TIME_TOKEN_REGEX.findall(raw_time)
+    if len(tokens) < 2:
+        return None
+
+    start = _time_token_to_minutes(tokens[0])
+    end = _time_token_to_minutes(tokens[1])
+    if start is None or end is None:
+        return None
+
+    if end < start:
+        end += 24 * 60
+    return start, end
+
+
+def _minutes_to_hhmm(total_minutes: int) -> str:
+    minutes_per_day = 24 * 60
+    normalized = ((total_minutes % minutes_per_day) + minutes_per_day) % minutes_per_day
+    hours, minutes = divmod(normalized, 60)
+    return f"{hours:02d}:{minutes:02d}"
+
+
+def _normalize_event_time_range(raw_time: str) -> str:
+    time_window = _extract_time_window(raw_time)
+    if time_window is None:
+        raise ValueError("Time must be in range format HH:MM - HH:MM")
+
+    start_minutes, end_minutes = time_window
+    if end_minutes <= start_minutes:
+        raise ValueError("End time must be later than start time")
+
+    return f"{_minutes_to_hhmm(start_minutes)} - {_minutes_to_hhmm(end_minutes)}"
 
 
 class UserRecord(BaseModel):
@@ -112,6 +193,7 @@ class EventSummary(BaseModel):
     spots: int
     type: EventType
     summary: str
+    lifecycle: EventLifecycle
 
 
 class EventDetail(EventSummary):
@@ -132,10 +214,15 @@ class EventMutationBase(BaseModel):
     agenda: list[str] = Field(default_factory=list)
     requirements: list[str] = Field(default_factory=list)
 
-    @field_validator("image", "name", "time", "place", "location", "summary")
+    @field_validator("image", "name", "place", "location", "summary")
     @classmethod
     def normalize_text_fields(cls, value: str) -> str:
         return value.strip()
+
+    @field_validator("time")
+    @classmethod
+    def normalize_event_time(cls, value: str) -> str:
+        return _normalize_event_time_range(value.strip())
 
     @field_validator("agenda", "requirements")
     @classmethod
@@ -204,6 +291,40 @@ class RegistrationPublic(BaseModel):
     semester: int
     status: RegistrationStatus
     created_at: datetime
+
+
+class EventReviewRecord(BaseModel):
+    id: str
+    event_id: str
+    student_id: str
+    full_name: str
+    rating: int = Field(ge=1, le=5)
+    comment: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class EventReviewCreateRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    comment: str = Field(min_length=3, max_length=1200)
+
+    @field_validator("comment")
+    @classmethod
+    def normalize_comment(cls, value: str) -> str:
+        normalized = value.strip()
+        if len(normalized) < 3:
+            raise ValueError("Comment must be at least 3 characters")
+        return normalized
+
+
+class EventReviewPublic(BaseModel):
+    id: str
+    event_id: str
+    full_name: str
+    rating: int
+    comment: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class UserEventRegistration(BaseModel):

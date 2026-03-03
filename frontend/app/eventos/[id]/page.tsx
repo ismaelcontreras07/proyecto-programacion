@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Clock3, MapPin, Ticket, GraduationCap } from "lucide-react";
 import EventRegistrationAction from "../../../components/events/EventRegistrationAction";
+import EventReviewSection from "../../../components/events/EventReviewSection";
 import { resolveEventImageSrc, type EventDetail } from "../../../lib/api";
+import { formatEventDate, normalizeEventTimeLabel } from "../../../lib/datetime";
 import "./event-detail.css";
 
 type EventDetailPageProps = {
@@ -12,19 +14,8 @@ type EventDetailPageProps = {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
-function formatDate(date: string, options?: Intl.DateTimeFormatOptions) {
-  const parsedDate = new Date(date);
-  if (Number.isNaN(parsedDate.getTime())) return date;
-
-  return parsedDate.toLocaleDateString("es-MX", options ?? {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
 function getAvailabilityLabel(spots: number) {
+  if (spots < 0) return "Registro cerrado";
   if (spots <= 20) return "Últimos lugares";
   if (spots <= 80) return "Alta demanda";
   return "Registro abierto";
@@ -49,7 +40,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     notFound();
   }
 
-  const availability = getAvailabilityLabel(event.spots);
+  const availability = event.lifecycle === "past" ? "Evento finalizado" : getAvailabilityLabel(event.spots);
 
   return (
     <main className="event-detail-page">
@@ -84,14 +75,14 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                 <Calendar />
                 <div>
                   <span>Fecha</span>
-                  <strong>{formatDate(event.date)}</strong>
+                  <strong>{formatEventDate(event.date)}</strong>
                 </div>
               </div>
               <div className="event-detail-meta-item">
                 <Clock3 />
                 <div>
                   <span>Horario</span>
-                  <strong>{event.time}</strong>
+                  <strong>{normalizeEventTimeLabel(event.time)}</strong>
                 </div>
               </div>
               <div className="event-detail-meta-item">
@@ -148,8 +139,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               se te enviará automáticamente a la página de acceso.
             </p>
           </div>
-          <EventRegistrationAction eventId={event.id} eventName={event.name} />
+          <EventRegistrationAction eventId={event.id} eventName={event.name} eventLifecycle={event.lifecycle} />
         </section>
+
+        <EventReviewSection eventId={event.id} eventLifecycle={event.lifecycle} />
       </section>
     </main>
   );

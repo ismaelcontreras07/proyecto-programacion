@@ -4,16 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, LogIn, Ticket } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { parseApiError } from "../../lib/api";
+import { parseApiError, type EventLifecycle } from "../../lib/api";
 
 interface EventRegistrationActionProps {
   eventId: string;
   eventName: string;
+  eventLifecycle: EventLifecycle;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
-export default function EventRegistrationAction({ eventId, eventName }: EventRegistrationActionProps) {
+export default function EventRegistrationAction({ eventId, eventName, eventLifecycle }: EventRegistrationActionProps) {
   const { isAuthenticated, isLoading, accessToken, user } = useAuth();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -25,6 +26,10 @@ export default function EventRegistrationAction({ eventId, eventName }: EventReg
     setSuccessMessage("");
 
     if (isLoading) return;
+    if (eventLifecycle === "past") {
+      setErrorMessage("Este evento ya finalizó y no admite nuevos registros.");
+      return;
+    }
 
     if (!isAuthenticated || !accessToken) {
       router.push("/login");
@@ -77,9 +82,18 @@ export default function EventRegistrationAction({ eventId, eventName }: EventReg
 
       <div className="event-detail-register-actions">
         {isAuthenticated && user?.role === "user" ? (
-          <button type="button" onClick={handleRegister} className="event-detail-register-btn" disabled={submitting}>
+          <button
+            type="button"
+            onClick={handleRegister}
+            className="event-detail-register-btn"
+            disabled={submitting || eventLifecycle === "past"}
+          >
             <Ticket size={16} />
-            {submitting ? "Registrando..." : "Registrarme al evento"}
+            {eventLifecycle === "past"
+              ? "Evento finalizado"
+              : submitting
+                ? "Registrando..."
+                : "Registrarme al evento"}
           </button>
         ) : isAuthenticated ? (
           <p className="event-detail-register-note">Tu sesión no corresponde a un alumno.</p>

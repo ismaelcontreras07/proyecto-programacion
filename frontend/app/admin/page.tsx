@@ -15,13 +15,20 @@ import {
   updateEvent,
 } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
+import {
+  buildEventTimeRange,
+  formatEventDate,
+  normalizeEventTimeLabel,
+  parseEventTimeRange,
+} from "../../lib/datetime";
 import "./admin.css";
 
 type EventFormState = {
   image: string;
   name: string;
   date: string;
-  time: string;
+  startTime: string;
+  endTime: string;
   place: string;
   location: string;
   spots: number;
@@ -35,7 +42,8 @@ const DEFAULT_FORM: EventFormState = {
   image: "",
   name: "",
   date: "",
-  time: "",
+  startTime: "",
+  endTime: "",
   place: "",
   location: "",
   spots: 50,
@@ -53,11 +61,16 @@ function linesToItems(value: string): string[] {
 }
 
 function formToPayload(form: EventFormState): EventMutationPayload {
+  const timeRange = buildEventTimeRange(form.startTime, form.endTime);
+  if (!timeRange) {
+    throw new Error("Define una hora de inicio y fin válidas. La hora de fin debe ser mayor.");
+  }
+
   return {
     image: form.image.trim(),
     name: form.name.trim(),
     date: form.date,
-    time: form.time.trim(),
+    time: timeRange,
     place: form.place.trim(),
     location: form.location.trim(),
     spots: Number(form.spots),
@@ -112,12 +125,14 @@ export default function AdminPage() {
         setError("El evento no existe o fue eliminado.");
         return;
       }
+      const { startTime, endTime } = parseEventTimeRange(detail.time);
       setEditingEventId(detail.id);
       setForm({
         image: detail.image,
         name: detail.name,
         date: detail.date,
-        time: detail.time,
+        startTime,
+        endTime,
         place: detail.place,
         location: detail.location,
         spots: detail.spots,
@@ -261,13 +276,23 @@ export default function AdminPage() {
               </label>
               <label>
                 Horario
-                <input
-                  type="text"
-                  value={form.time}
-                  onChange={(event) => setForm((prev) => ({ ...prev, time: event.target.value }))}
-                  placeholder="Ej. 10:00 a.m.-1:00 p.m."
-                  required
-                />
+                <div className="admin-time-range-fields">
+                  <input
+                    type="time"
+                    value={form.startTime}
+                    onChange={(event) => setForm((prev) => ({ ...prev, startTime: event.target.value }))}
+                    aria-label="Hora de inicio"
+                    required
+                  />
+                  <input
+                    type="time"
+                    value={form.endTime}
+                    onChange={(event) => setForm((prev) => ({ ...prev, endTime: event.target.value }))}
+                    aria-label="Hora de fin"
+                    required
+                  />
+                </div>
+                <span className="admin-field-help">Formato automático: HH:MM - HH:MM</span>
               </label>
               <label>
                 Sede
@@ -357,7 +382,7 @@ export default function AdminPage() {
                   <li key={item.id} className="admin-event-row">
                     <div>
                       <strong>{item.name}</strong>
-                      <span>{item.date} · {item.type}</span>
+                      <span>{formatEventDate(item.date)} · {normalizeEventTimeLabel(item.time)} · {item.type}</span>
                     </div>
                     <div className="admin-event-actions">
                       <button type="button" className="secondary" onClick={() => void handleEdit(item.id)}>

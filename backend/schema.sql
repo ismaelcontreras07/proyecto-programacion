@@ -79,3 +79,20 @@ CREATE TABLE event_registrations (
 CREATE INDEX idx_registrations_event_id ON event_registrations(event_id);
 CREATE INDEX idx_registrations_status ON event_registrations(status);
 CREATE INDEX idx_registrations_created_at ON event_registrations(created_at);
+
+-- EVENT REVIEWS
+CREATE TABLE event_reviews (
+    id VARCHAR(64) PRIMARY KEY,
+    event_id VARCHAR(32) NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    student_id VARCHAR(40) NOT NULL,
+    full_name VARCHAR(120) NOT NULL,
+    rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (event_id, student_id)
+);
+
+CREATE INDEX idx_event_reviews_event_id ON event_reviews(event_id);
+CREATE INDEX idx_event_reviews_student_id ON event_reviews(student_id);
+CREATE INDEX idx_event_reviews_rating ON event_reviews(rating);

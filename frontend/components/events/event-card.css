@@ -85,6 +85,10 @@
     background: rgba(30, 64, 175, 0.82);
 }
 
+.availability-past {
+    background: rgba(79, 98, 122, 0.88);
+}
+
 .event-date-chip {
     position: absolute;
     left: 0.8rem;

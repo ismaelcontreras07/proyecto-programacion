@@ -83,6 +83,10 @@
   .admin-form {
     grid-template-columns: 1fr;
   }
+
+  .admin-time-range-fields {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-form label {
@@ -92,6 +96,12 @@
   color: #234561;
   font-size: 0.84rem;
   font-weight: 600;
+}
+
+.admin-time-range-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
 }
 
 .admin-field-help {

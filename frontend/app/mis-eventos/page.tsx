@@ -6,18 +6,8 @@ import { useRouter } from "next/navigation";
 import { Calendar, Clock3, MapPin, Ticket, ArrowRight, XCircle } from "lucide-react";
 import { cancelMyRegistration, fetchMyRegistrations, type UserEventRegistration } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
+import { formatEventDate, normalizeEventTimeLabel } from "../../lib/datetime";
 import "./registrations.css";
-
-function formatDate(date: string, options?: Intl.DateTimeFormatOptions): string {
-  const parsedDate = new Date(date);
-  if (Number.isNaN(parsedDate.getTime())) return date;
-  return parsedDate.toLocaleDateString("es-MX", options ?? {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 export default function MyRegistrationsPage() {
   const { accessToken, isAuthenticated, isLoading, user } = useAuth();
@@ -139,11 +129,11 @@ export default function MyRegistrationsPage() {
               <div className="my-events-meta-grid">
                 <div className="my-events-meta-item">
                   <Calendar size={16} />
-                  <span>{formatDate(item.event.date)}</span>
+                  <span>{formatEventDate(item.event.date)}</span>
                 </div>
                 <div className="my-events-meta-item">
                   <Clock3 size={16} />
-                  <span>{item.event.time}</span>
+                  <span>{normalizeEventTimeLabel(item.event.time)}</span>
                 </div>
                 <div className="my-events-meta-item my-events-meta-item-full">
                   <MapPin size={16} />
@@ -151,7 +141,7 @@ export default function MyRegistrationsPage() {
                 </div>
                 <div className="my-events-meta-item my-events-meta-item-full">
                   <Ticket size={16} />
-                  <span>Te registraste el {formatDate(item.registered_at, { day: "2-digit", month: "long", year: "numeric" })}</span>
+                  <span>Te registraste el {formatEventDate(item.registered_at)}</span>
                 </div>
               </div>
 
