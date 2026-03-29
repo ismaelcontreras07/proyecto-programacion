@@ -47,7 +47,7 @@ const Navbar1 = () => {
                             whileHover={{ rotate: 10 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <img src="/logo-unimex.png" alt="Unimex Logo" className="logo-image" />
+                            <img src="/logo-unimex-horizontal.png" alt="Unimex Logo" className="logo-image" />
                         </motion.div>
                     </Link>
                 </div>

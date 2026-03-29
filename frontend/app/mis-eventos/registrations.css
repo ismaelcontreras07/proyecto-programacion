@@ -103,6 +103,10 @@
   background: #a11f3f;
 }
 
+.my-events-status-finished {
+  background: #3b5b7e;
+}
+
 .my-events-card h2 {
   margin: 0.65rem 0 0;
   color: #092d55;
@@ -194,6 +198,10 @@
   color: #7a5463;
   font-size: 0.83rem;
   font-weight: 600;
+}
+
+.my-events-cancel-note-finished {
+  color: #395676;
 }
 
 @media (max-width: 560px) {

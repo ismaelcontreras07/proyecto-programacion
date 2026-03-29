@@ -7,7 +7,7 @@
   --text-color: #363636;
   --muted-color: #8b8b8b;
 
-  --border-radius: 0.7rem;
+  --border-radius: 0.4rem;
   --azul-unimex-hover: #1c75ce;
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
@@ -37,23 +37,21 @@ h1 {
   color: var(--azul-unimex);
 }
 
-html.lenis,
-html.lenis body {
-  height: auto;
+#smooth-wrapper,
+#smooth-content {
+  min-height: 100%;
 }
 
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
-.lenis.lenis-stopped {
+.has-smooth-scroll body {
   overflow: hidden;
 }
 
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
+.has-smooth-scroll #smooth-wrapper {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
 }
 
-.lenis.lenis-smooth iframe {
-  pointer-events: none;
+.has-smooth-scroll #smooth-content {
+  will-change: transform;
 }

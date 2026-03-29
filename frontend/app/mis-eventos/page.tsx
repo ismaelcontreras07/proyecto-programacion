@@ -53,27 +53,39 @@ export default function MyRegistrationsPage() {
     return () => controller.abort();
   }, [accessToken, isAuthenticated, isLoading, router, user?.role]);
 
-  const handleCancelRegistration = async (registrationId: string, eventId: string, eventName: string) => {
+  const handleCancelRegistration = (
+    registrationId: string,
+    eventId: string,
+    eventName: string,
+    isPastEvent: boolean,
+  ) => {
     if (!accessToken) return;
+    if (isPastEvent) {
+      setError("No puedes cancelar asistencia en eventos finalizados.");
+      setSuccessMessage("");
+      return;
+    }
 
     setError("");
     setSuccessMessage("");
     setCancellingRegistrationId(registrationId);
-    try {
-      await cancelMyRegistration(accessToken, eventId);
-      setItems((currentItems) =>
-        currentItems.map((item) =>
-          item.registration_id === registrationId
-            ? { ...item, status: "cancelled" }
-            : item,
-        ),
-      );
-      setSuccessMessage(`Cancelaste tu asistencia a "${eventName}".`);
-    } catch (cancelError) {
-      setError(cancelError instanceof Error ? cancelError.message : "No se pudo cancelar tu asistencia");
-    } finally {
-      setCancellingRegistrationId(null);
-    }
+    void (async () => {
+      try {
+        await cancelMyRegistration(accessToken, eventId);
+        setItems((currentItems) =>
+          currentItems.map((item) =>
+            item.registration_id === registrationId
+              ? { ...item, status: "cancelled" }
+              : item,
+          ),
+        );
+        setSuccessMessage(`Cancelaste tu asistencia a "${eventName}".`);
+      } catch (cancelError) {
+        setError(cancelError instanceof Error ? cancelError.message : "No se pudo cancelar tu asistencia");
+      } finally {
+        setCancellingRegistrationId(null);
+      }
+    })();
   };
 
   if (isLoading || loadingData) {
@@ -119,56 +131,75 @@ export default function MyRegistrationsPage() {
         )}
 
         <div className="my-events-grid">
-          {items.map((item) => (
-            <article key={item.registration_id} className="my-events-card">
-              <span className={`my-events-status ${item.status === "cancelled" ? "my-events-status-cancelled" : ""}`}>
-                {item.status === "registered" ? "Registrado" : "Cancelado"}
-              </span>
-              <h2>{item.event.name}</h2>
+          {items.map((item) => {
+            const isPastEvent = item.event.lifecycle === "past";
+            const isRegistered = item.status === "registered";
+            const statusLabel = item.status === "cancelled"
+              ? "Cancelado"
+              : isPastEvent
+                ? "Finalizado"
+                : "Registrado";
+            const statusClassName = [
+              "my-events-status",
+              item.status === "cancelled" ? "my-events-status-cancelled" : "",
+              item.status === "registered" && isPastEvent ? "my-events-status-finished" : "",
+            ].filter(Boolean).join(" ");
 
-              <div className="my-events-meta-grid">
-                <div className="my-events-meta-item">
-                  <Calendar size={16} />
-                  <span>{formatEventDate(item.event.date)}</span>
-                </div>
-                <div className="my-events-meta-item">
-                  <Clock3 size={16} />
-                  <span>{normalizeEventTimeLabel(item.event.time)}</span>
-                </div>
-                <div className="my-events-meta-item my-events-meta-item-full">
-                  <MapPin size={16} />
-                  <span>{item.event.place}</span>
-                </div>
-                <div className="my-events-meta-item my-events-meta-item-full">
-                  <Ticket size={16} />
-                  <span>Te registraste el {formatEventDate(item.registered_at)}</span>
-                </div>
-              </div>
+            return (
+              <article key={item.registration_id} className="my-events-card">
+                <span className={statusClassName}>
+                  {statusLabel}
+                </span>
+                <h2>{item.event.name}</h2>
 
-              <p className="my-events-summary">{item.event.summary}</p>
+                <div className="my-events-meta-grid">
+                  <div className="my-events-meta-item">
+                    <Calendar size={16} />
+                    <span>{formatEventDate(item.event.date)}</span>
+                  </div>
+                  <div className="my-events-meta-item">
+                    <Clock3 size={16} />
+                    <span>{normalizeEventTimeLabel(item.event.time)}</span>
+                  </div>
+                  <div className="my-events-meta-item my-events-meta-item-full">
+                    <MapPin size={16} />
+                    <span>{item.event.place}</span>
+                  </div>
+                  <div className="my-events-meta-item my-events-meta-item-full">
+                    <Ticket size={16} />
+                    <span>Te registraste el {formatEventDate(item.registered_at)}</span>
+                  </div>
+                </div>
 
-              <div className="my-events-actions">
-                <Link href={`/eventos/${item.event_id}`} className="my-events-cta">
-                  Ver detalle del evento
-                  <ArrowRight size={14} />
-                </Link>
+                <p className="my-events-summary">{item.event.summary}</p>
 
-                {item.status === "registered" ? (
-                  <button
-                    type="button"
-                    className="my-events-cancel-btn"
-                    onClick={() => handleCancelRegistration(item.registration_id, item.event_id, item.event.name)}
-                    disabled={cancellingRegistrationId === item.registration_id}
-                  >
-                    <XCircle size={14} />
-                    {cancellingRegistrationId === item.registration_id ? "Cancelando..." : "Cancelar asistencia"}
-                  </button>
-                ) : (
-                  <p className="my-events-cancel-note">Tu asistencia ya fue cancelada.</p>
-                )}
-              </div>
-            </article>
-          ))}
+                <div className="my-events-actions">
+                  <Link href={`/eventos/${item.event_id}`} className="my-events-cta">
+                    Ver detalle del evento
+                    <ArrowRight size={14} />
+                  </Link>
+
+                  {isRegistered && !isPastEvent ? (
+                    <button
+                      type="button"
+                      className="my-events-cancel-btn"
+                      onClick={() => handleCancelRegistration(item.registration_id, item.event_id, item.event.name, isPastEvent)}
+                      disabled={cancellingRegistrationId === item.registration_id}
+                    >
+                      <XCircle size={14} />
+                      {cancellingRegistrationId === item.registration_id ? "Cancelando..." : "Cancelar asistencia"}
+                    </button>
+                  ) : isRegistered ? (
+                    <p className="my-events-cancel-note my-events-cancel-note-finished">
+                      Evento finalizado. La asistencia ya no se puede cancelar.
+                    </p>
+                  ) : (
+                    <p className="my-events-cancel-note">Tu asistencia ya fue cancelada.</p>
+                  )}
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
     </main>

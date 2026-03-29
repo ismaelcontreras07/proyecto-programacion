@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, Clock3, MapPin, Ticket, GraduationCap } from "lucide-react";
+import { ArrowLeft, Calendar, Clock3, GraduationCap, ListChecks, MapPin, Ticket } from "lucide-react";
 import EventRegistrationAction from "../../../components/events/EventRegistrationAction";
 import EventReviewSection from "../../../components/events/EventReviewSection";
 import { resolveEventImageSrc, type EventDetail } from "../../../lib/api";
@@ -50,25 +50,31 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           Volver a eventos
         </Link>
 
-        <article className="event-detail-hero">
-          <div className="event-detail-image-wrap">
-            <Image
-              src={resolveEventImageSrc(event.image)}
-              alt={event.name}
-              fill
-              className="event-detail-image"
-              sizes="(max-width: 900px) 100vw, 42vw"
-            />
-            <div className="event-detail-image-overlay" />
+        <article className="event-detail-hero-card">
+          <div className="event-detail-hero-media">
+            <div className="event-detail-image-wrap">
+              <Image
+                src={resolveEventImageSrc(event.image)}
+                alt={event.name}
+                fill
+                className="event-detail-image"
+                sizes="(max-width: 900px) 100vw, 48vw"
+              />
+              <div className="event-detail-image-overlay" />
+            </div>
             <div className="event-detail-badges">
               <span className="event-detail-badge event-detail-badge-type">{event.type}</span>
               <span className="event-detail-badge event-detail-badge-status">{availability}</span>
             </div>
           </div>
+        </article>
 
-          <div className="event-detail-main-info">
-            <h1>{event.name}</h1>
-            <p>{event.summary}</p>
+        <section className="event-detail-layout">
+          <article className="event-detail-main-info">
+            <header className="event-detail-head">
+              <h1>{event.name}</h1>
+              <p>{event.summary}</p>
+            </header>
 
             <div className="event-detail-meta-grid">
               <div className="event-detail-meta-item">
@@ -95,8 +101,8 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               <div className="event-detail-meta-item">
                 <Ticket />
                 <div>
-                  <span>Cupos disponibles</span>
-                  <strong>{event.spots}</strong>
+                  <span>Cupos</span>
+                  <strong>{event.lifecycle === "past" ? "Evento finalizado" : event.spots}</strong>
                 </div>
               </div>
             </div>
@@ -105,44 +111,42 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               <span>Ubicación completa</span>
               <p>{event.location}</p>
             </div>
-          </div>
-        </article>
 
-        <section className="event-detail-sections">
-          <article className="event-detail-panel">
-            <h2>
-              <GraduationCap />
-              Agenda del evento
-            </h2>
-            <ul>
-              {event.agenda.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </article>
+            <section className="event-detail-sections">
+              <article className="event-detail-panel">
+                <h2>
+                  <GraduationCap />
+                  Agenda del evento
+                </h2>
+                <ul>
+                  {event.agenda.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
 
-          <article className="event-detail-panel">
-            <h2>Requisitos para alumnos</h2>
-            <ul>
-              {event.requirements.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+              <article className="event-detail-panel">
+                <h2>
+                  <ListChecks />
+                  Requisitos
+                </h2>
+                <ul>
+                  {event.requirements.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            </section>
+
+            <EventReviewSection eventId={event.id} eventLifecycle={event.lifecycle} />
           </article>
+          <aside className="event-detail-aside">
+            <EventRegistrationAction eventId={event.id} eventName={event.name} eventLifecycle={event.lifecycle} />
+          </aside>
         </section>
-
-        <section className="event-detail-registration">
-          <div className="event-detail-registration-copy">
-            <h2>Regístrate al evento</h2>
-            <p>
-              El registro ahora se hace directamente desde tu cuenta activa. Si no tienes sesión iniciada,
-              se te enviará automáticamente a la página de acceso.
-            </p>
-          </div>
+        <section className="event-detail-mobile-registration">
           <EventRegistrationAction eventId={event.id} eventName={event.name} eventLifecycle={event.lifecycle} />
         </section>
-
-        <EventReviewSection eventId={event.id} eventLifecycle={event.lifecycle} />
       </section>
     </main>
   );

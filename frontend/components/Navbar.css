@@ -12,7 +12,7 @@
   justify-content: space-between;
   padding: 0.5rem .8rem;
   background-color: white;
-  border-radius: 9999px;
+  border-radius: var(--border-radius);
   width: 100%;
   max-width: 48rem;
   position: relative;

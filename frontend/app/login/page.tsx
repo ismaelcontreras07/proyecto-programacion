@@ -84,7 +84,7 @@ export default function LoginPage() {
     <SignInPage
       title="UNIMEX Eventos"
       description="Accede con tu cuenta o regístrate para participar en los eventos de Unimex."
-      heroImageSrc="/upscalemedia-transformed.jpeg"
+      heroImageSrc="/hero-campus-optimized.jpg"
       testimonials={[
         {
           avatarSrc: "/Photos/photo1.jpg",
