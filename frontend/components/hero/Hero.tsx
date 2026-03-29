@@ -1,9 +1,7 @@
 "use client"
 
-import Image from "next/image"
+import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import SplitText from "../ui/SplitText"
-import BlurText from "../ui/BlurText"
 import "./hero.css"
 
 type HeroMetric = {
@@ -22,6 +20,15 @@ type HeroContent = {
 
 export default function Hero() {
     const pathname = usePathname()
+    const defaultImageSrc = "/hero-campus-optimized.jpg"
+    const fallbackImageSrc = "/logo-unimex-horizontal.png"
+    const [heroImageSrc, setHeroImageSrc] = useState(defaultImageSrc)
+    const [didFallbackImage, setDidFallbackImage] = useState(false)
+
+    useEffect(() => {
+        setHeroImageSrc(defaultImageSrc)
+        setDidFallbackImage(false)
+    }, [pathname])
 
     const getHeroContent = (): HeroContent => {
         switch (pathname) {
@@ -143,21 +150,25 @@ export default function Hero() {
     }
 
     const content = getHeroContent()
-    const imageSrc = "/hero-campus-optimized.jpg"
     const shouldPrioritizeImage = pathname === "/"
 
+    const handleHeroImageError = () => {
+        if (didFallbackImage) return
+        setDidFallbackImage(true)
+        setHeroImageSrc(fallbackImageSrc)
+    }
 
     return (
         <div className="hero-container">
             <div className="hero-background">
-                <Image
-                    src={imageSrc}
+                <img
+                    src={heroImageSrc}
                     alt="Campus UNIMEX"
-                    fill
                     className="hero-image"
-                    priority={shouldPrioritizeImage}
-                    quality={68}
-                    sizes="100vw"
+                    loading={shouldPrioritizeImage ? "eager" : "lazy"}
+                    fetchPriority={shouldPrioritizeImage ? "high" : "auto"}
+                    decoding="async"
+                    onError={handleHeroImageError}
                 />
             </div>
 
@@ -169,31 +180,8 @@ export default function Hero() {
                 <div className="hero-content-shell">
                     <section className="hero-main">
                     <p className="hero-kicker">{content.kicker}</p>
-                    <SplitText
-                        key={content.title}
-                        text={content.title}
-                        className="hero-title"
-                        tag="h1"
-                        delay={32}
-                        duration={0.84}
-                        splitType="chars"
-                        from={{ opacity: 0, filter: "blur(6px)", y: 22 }}
-                        to={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                        threshold={0.04}
-                        rootMargin="-6%"
-                        textAlign="left"
-                    />
-                    <BlurText
-                        key={content.subtitle}
-                        text={content.subtitle}
-                        className="hero-subtitle"
-                        animateBy="words"
-                        direction="bottom"
-                        delay={26}
-                        threshold={0.12}
-                        rootMargin="-10% 0px"
-                        stepDuration={0.28}
-                    />
+                    <h1 className="hero-title">{content.title}</h1>
+                    <p className="hero-subtitle">{content.subtitle}</p>
 
                     <p className="hero-track">{content.track}</p>
 
