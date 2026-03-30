@@ -91,6 +91,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const [infoMessage, setInfoMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const [nombres, setNombres] = useState("");
+  const [apellidoP, setApellidoP] = useState("");
+  const [apellidoM, setApellidoM] = useState("");
+
   const [signInForm, setSignInForm] = useState<SignInPayload>({
     studentId: "",
     password: "",
@@ -134,7 +138,14 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     setInfoMessage("");
 
     try {
-      await onSignUp(signUpForm);
+  const fullName = `${nombres} ${apellidoP} ${apellidoM}`.replace(/\s+/g, " ").trim();
+  
+  const updatedForm = {
+  ...signUpForm,
+  fullName,
+};
+
+await onSignUp(updatedForm);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "No se pudo crear la cuenta");
     } finally {
@@ -240,19 +251,46 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
           {isSignUpMode && (
             <form className="signin-form-grid" onSubmit={submitSignUp}>
-              <div className="signin-field signin-field-full">
-                <label>Nombre completo</label>
-                <InputShell>
-                  <input
-                    type="text"
-                    value={signUpForm.fullName}
-                    onChange={(event) => setSignUpForm((prev) => ({ ...prev, fullName: event.target.value }))}
-                    placeholder="Ej. Ana Gómez Pérez"
-                    autoComplete="name"
-                    required
-                  />
-                </InputShell>
-              </div>
+             <div className="signin-field">
+  <label>Nombres</label>
+  <InputShell>
+    <input
+      type="text"
+      value={nombres}
+      onChange={(event) => setNombres(event.target.value)}
+      placeholder="Ej. Ana María"
+      autoComplete="given-name"
+      required
+    />
+  </InputShell>
+</div>
+
+<div className="signin-field">
+  <label>Apellido paterno</label>
+  <InputShell>
+    <input
+      type="text"
+      value={apellidoP}
+      onChange={(event) => setApellidoP(event.target.value)}
+      placeholder="Ej. Gómez"
+      autoComplete="family-name"
+      required
+    />
+  </InputShell>
+</div>
+
+<div className="signin-field">
+  <label>Apellido materno</label>
+  <InputShell>
+    <input
+      type="text"
+      value={apellidoM}
+      onChange={(event) => setApellidoM(event.target.value)}
+      placeholder="Ej. Pérez"
+      autoComplete="additional-name"
+    />
+  </InputShell>
+</div>
 
               <div className="signin-field">
                 <label>Matrícula</label>

@@ -34,8 +34,8 @@ export default function Hero() {
         switch (pathname) {
             case "/":
                 return {
-                    kicker: "Campus UNIMEX",
-                    title: "Experiencia Académica de Alto Nivel",
+                    kicker: "Campus UNIMEX POLANCO",
+                    title: "Formacion Academica de Excelencia 🎓 ",
                     subtitle: "Conecta con eventos formativos, talleres y experiencias que impulsan tu perfil universitario.",
                     track: "Una plataforma institucional para aprender, participar y destacar.",
                     pillars: ["Excelencia académica", "Innovación aplicada", "Vinculación profesional"],
