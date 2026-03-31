@@ -16,7 +16,8 @@ def build_seed_users() -> list[UserRecord]:
         UserRecord(
             id="usr_admin",
             username="admin",
-            full_name="Administrador UNIMEX",
+            first_name="Administrador",
+            last_name="UNIMEX",
             role=Role.ADMIN,
             student_id="ADM00001-00",
             password_hash=hash_password("admin"),
@@ -26,7 +27,8 @@ def build_seed_users() -> list[UserRecord]:
         UserRecord(
             id="usr_user",
             username="user",
-            full_name="Alumno Demo",
+            first_name="Alumno",
+            last_name="Demo",
             role=Role.USER,
             password_hash=hash_password("user"),
             is_active=True,

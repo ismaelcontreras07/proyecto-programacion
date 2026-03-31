@@ -219,7 +219,8 @@ class SqliteStore:
         return UserRecord(
             id=row["id"],
             username=row["username"],
-            full_name=row["full_name"],
+            first_name=row["first_name"],
+            last_name=row["last_name"],
             role=row["role"],
             password_hash=row["password_hash"],
             is_active=bool(row["is_active"]),
@@ -264,7 +265,8 @@ class SqliteStore:
         return RegistrationRecord(
             id=row["id"],
             event_id=row["event_id"],
-            full_name=row["full_name"],
+            first_name=row["first_name"],
+            last_name=row["last_name"],
             student_id=row["student_id"],
             career=row["career"],
             semester=row["semester"],
@@ -278,7 +280,8 @@ class SqliteStore:
             id=row["id"],
             event_id=row["event_id"],
             student_id=row["student_id"],
-            full_name=row["full_name"],
+            first_name=row["first_name"],
+            last_name=row["last_name"],
             rating=row["rating"],
             comment=row["comment"],
             created_at=_to_datetime(row["created_at"]),
@@ -302,15 +305,16 @@ class SqliteStore:
                         connection.execute(
                             """
                             INSERT INTO users (
-                                id, username, full_name, student_id, career, semester, role,
+                                id, username, first_name, last_name, student_id, career, semester, role,
                                 password_hash, is_active, created_at, updated_at
                             )
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             """,
                             (
                                 user.id,
                                 user.username,
-                                user.full_name,
+                                user.first_name,
+                                user.last_name,
                                 user.student_id,
                                 user.career,
                                 user.semester,
@@ -341,7 +345,8 @@ class SqliteStore:
                                 """
                                 UPDATE users
                                 SET
-                                    full_name = ?,
+                                    first_name = ?,
+                                    last_name = ?,
                                     role = 'admin',
                                     password_hash = ?,
                                     is_active = 1,
@@ -349,7 +354,8 @@ class SqliteStore:
                                 WHERE id = ?
                                 """,
                                 (
-                                    admin_seed.full_name,
+                                    admin_seed.first_name,
+                                    admin_seed.last_name,
                                     admin_seed.password_hash,
                                     self._format_datetime(admin_seed.created_at),
                                     existing["id"],
@@ -360,15 +366,16 @@ class SqliteStore:
                             connection.execute(
                                 """
                                 INSERT INTO users (
-                                    id, username, full_name, student_id, career, semester, role,
+                                    id, username, first_name, last_name, student_id, career, semester, role,
                                     password_hash, is_active, created_at, updated_at
                                 )
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                                 """,
                                 (
                                     admin_seed.id,
                                     admin_seed.username,
-                                    admin_seed.full_name,
+                                    admin_seed.first_name,
+                                    admin_seed.last_name,
                                     admin_seed.student_id,
                                     admin_seed.career,
                                     admin_seed.semester,
@@ -460,15 +467,16 @@ class SqliteStore:
                 connection.execute(
                     """
                     INSERT INTO users (
-                        id, username, full_name, student_id, career, semester, role,
+                        id, username, first_name, last_name, student_id, career, semester, role,
                         password_hash, is_active, created_at, updated_at
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         user.id,
                         user.username,
-                        user.full_name,
+                        user.first_name,
+                        user.last_name,
                         user.student_id,
                         user.career,
                         user.semester,
@@ -670,15 +678,16 @@ class SqliteStore:
                 connection.execute(
                     """
                     INSERT INTO event_registrations (
-                        id, event_id, full_name, student_id, career, semester,
+                        id, event_id, first_name, last_name, student_id, career, semester,
                         status, created_at, updated_at
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         registration.id,
                         registration.event_id,
-                        registration.full_name,
+                        registration.first_name,
+                        registration.last_name,
                         registration.student_id,
                         registration.career,
                         registration.semester,
@@ -698,7 +707,8 @@ class SqliteStore:
                     """
                     UPDATE event_registrations
                     SET
-                        full_name = ?,
+                        first_name = ?,
+                        last_name = ?,
                         student_id = ?,
                         career = ?,
                         semester = ?,
@@ -707,7 +717,8 @@ class SqliteStore:
                     WHERE id = ?
                     """,
                     (
-                        registration.full_name,
+                        registration.first_name,
+                        registration.last_name,
                         registration.student_id,
                         registration.career,
                         registration.semester,
@@ -797,16 +808,17 @@ class SqliteStore:
                 connection.execute(
                     """
                     INSERT INTO event_reviews (
-                        id, event_id, student_id, full_name, rating, comment,
+                        id, event_id, student_id, first_name, last_name, rating, comment,
                         created_at, updated_at
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         review.id,
                         review.event_id,
                         review.student_id,
-                        review.full_name,
+                        review.first_name,
+                        review.last_name,
                         review.rating,
                         review.comment,
                         created_at,
@@ -824,14 +836,16 @@ class SqliteStore:
                     """
                     UPDATE event_reviews
                     SET
-                        full_name = ?,
+                        first_name = ?,
+                        last_name = ?,
                         rating = ?,
                         comment = ?,
                         updated_at = ?
                     WHERE id = ?
                     """,
                     (
-                        review.full_name,
+                        review.first_name,
+                        review.last_name,
                         review.rating,
                         review.comment,
                         updated_at,

@@ -34,7 +34,8 @@ export interface UserEventRegistration {
 export interface RegistrationPublic {
   id: string;
   event_id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   student_id: string;
   career: string;
   semester: number;
@@ -45,7 +46,8 @@ export interface RegistrationPublic {
 export interface EventReviewPublic {
   id: string;
   event_id: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   rating: number;
   comment: string;
   created_at: string;

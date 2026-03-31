@@ -78,7 +78,7 @@ El backend ya permite flujo de alta:
 
 1. `POST /api/auth/register`
 
-El registro solicita: nombre, matrícula, contraseña, carrera y cuatrimestre.
+El registro solicita: nombre, apellido, matrícula, contraseña, carrera y cuatrimestre.
 La matrícula debe cumplir formato `XXXXXXXX-XX`.
 
 Notas de registro a evento:

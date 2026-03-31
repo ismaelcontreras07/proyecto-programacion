@@ -8,7 +8,9 @@ type Role = "admin" | "user";
 interface User {
   id: string;
   username: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
+  full_name?: string;
   role: Role;
   student_id?: string | null;
   career?: string | null;
@@ -37,6 +39,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 let cachedSessionRaw: string | null | undefined;
 let cachedSessionValue: AuthSession | null = null;
 
+function splitLegacyFullName(fullName: string): { firstName: string; lastName: string } {
+  const normalized = fullName.trim().replace(/\s+/g, " ");
+  if (!normalized) {
+    return { firstName: "Alumno", lastName: "UNIMEX" };
+  }
+
+  const [firstName, ...rest] = normalized.split(" ");
+  return {
+    firstName,
+    lastName: rest.join(" ") || firstName,
+  };
+}
+
 function readStoredSession(): AuthSession | null {
   if (typeof window === "undefined") return null;
 
@@ -53,6 +68,11 @@ function readStoredSession(): AuthSession | null {
 
   try {
     const parsed = JSON.parse(raw) as AuthSession;
+    if (parsed?.user && (!parsed.user.first_name || !parsed.user.last_name) && parsed.user.full_name) {
+      const split = splitLegacyFullName(parsed.user.full_name);
+      parsed.user.first_name = split.firstName;
+      parsed.user.last_name = split.lastName;
+    }
     if (!parsed?.accessToken || !parsed?.user) {
       cachedSessionValue = null;
       return null;

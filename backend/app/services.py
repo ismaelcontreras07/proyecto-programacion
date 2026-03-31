@@ -73,7 +73,8 @@ def _to_user_public(user: UserRecord) -> UserPublic:
     return UserPublic(
         id=user.id,
         username=user.username,
-        full_name=user.full_name,
+        first_name=user.first_name,
+        last_name=user.last_name,
         role=user.role,
         student_id=user.student_id,
         career=user.career,
@@ -114,7 +115,8 @@ def _to_event_review_public(review: EventReviewRecord) -> EventReviewPublic:
     return EventReviewPublic(
         id=review.id,
         event_id=review.event_id,
-        full_name=review.full_name,
+        first_name=review.first_name,
+        last_name=review.last_name,
         rating=review.rating,
         comment=review.comment,
         created_at=review.created_at,
@@ -296,7 +298,8 @@ class AuthService:
         new_user = UserRecord(
             id=self.store.generate_user_id(),
             username=candidate_username,
-            full_name=payload.full_name,
+            first_name=payload.first_name,
+            last_name=payload.last_name,
             role="user",
             password_hash=hash_password(payload.password),
             is_active=True,
@@ -373,7 +376,8 @@ class EventService:
         if existing:
             existing.rating = payload.rating
             existing.comment = payload.comment
-            existing.full_name = current_user.full_name
+            existing.first_name = current_user.first_name
+            existing.last_name = current_user.last_name
             existing.updated_at = now
             saved = self.store.update_review(existing)
             return _to_event_review_public(saved)
@@ -382,7 +386,8 @@ class EventService:
             id=self.store.generate_review_id(),
             event_id=event_id,
             student_id=current_user.student_id,
-            full_name=current_user.full_name,
+            first_name=current_user.first_name,
+            last_name=current_user.last_name,
             rating=payload.rating,
             comment=payload.comment,
             created_at=now,
@@ -504,7 +509,8 @@ class RegistrationService:
         registration = RegistrationRecord(
             id=self.store.generate_registration_id(),
             event_id=payload.event_id,
-            full_name=payload.full_name,
+            first_name=payload.first_name,
+            last_name=payload.last_name,
             student_id=payload.student_id,
             career=payload.career,
             semester=payload.semester,
@@ -550,7 +556,8 @@ class RegistrationService:
 
         payload = RegistrationCreate(
             event_id=event_id,
-            full_name=current_user.full_name,
+            first_name=current_user.first_name,
+            last_name=current_user.last_name,
             student_id=current_user.student_id,
             career=current_user.career,
             semester=current_user.semester,
@@ -679,7 +686,8 @@ class AdminService:
             "event_time",
             "status",
             "student_id",
-            "full_name",
+            "first_name",
+            "last_name",
             "career",
             "semester",
             "registered_at",
@@ -696,7 +704,8 @@ class AdminService:
                     _to_csv_cell(_normalize_event_time_for_output(event.time) if event else ""),
                     _to_csv_cell(registration.status),
                     _to_csv_cell(registration.student_id),
-                    _to_csv_cell(registration.full_name),
+                    _to_csv_cell(registration.first_name),
+                    _to_csv_cell(registration.last_name),
                     _to_csv_cell(registration.career),
                     _to_csv_cell(registration.semester),
                     _to_csv_cell(registration.created_at.isoformat(sep=" ", timespec="seconds")),

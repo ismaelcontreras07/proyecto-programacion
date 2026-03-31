@@ -117,7 +117,8 @@ class UserRecord(BaseModel):
 
     id: str
     username: str
-    full_name: str
+    first_name: str
+    last_name: str
     role: Role
     password_hash: str
     is_active: bool = True
@@ -132,7 +133,8 @@ class UserPublic(BaseModel):
 
     id: str
     username: str
-    full_name: str
+    first_name: str
+    last_name: str
     role: Role
     student_id: str
     career: str | None = None
@@ -247,7 +249,8 @@ class RegistrationRecord(BaseModel):
 
     id: str
     event_id: str
-    full_name: str
+    first_name: str
+    last_name: str
     student_id: str
     career: str
     semester: int = Field(ge=1, le=12)
@@ -256,7 +259,8 @@ class RegistrationRecord(BaseModel):
 
 
 class UserRegistrationData(BaseModel):
-    full_name: str = Field(min_length=3, max_length=120)
+    first_name: str = Field(min_length=2, max_length=80)
+    last_name: str = Field(min_length=2, max_length=80)
     student_id: str = Field(min_length=3, max_length=40)
     career: str = Field(min_length=3, max_length=120)
     semester: int = Field(ge=1, le=12)
@@ -266,7 +270,7 @@ class UserRegistrationData(BaseModel):
     def normalize_student_id(cls, value: str) -> str:
         return _normalize_student_id(value)
 
-    @field_validator("full_name", "career")
+    @field_validator("first_name", "last_name", "career")
     @classmethod
     def normalize_strings(cls, value: str) -> str:
         return value.strip()
@@ -285,7 +289,8 @@ class RegistrationPublic(BaseModel):
 
     id: str
     event_id: str
-    full_name: str
+    first_name: str
+    last_name: str
     student_id: str
     career: str
     semester: int
@@ -297,7 +302,8 @@ class EventReviewRecord(BaseModel):
     id: str
     event_id: str
     student_id: str
-    full_name: str
+    first_name: str
+    last_name: str
     rating: int = Field(ge=1, le=5)
     comment: str
     created_at: datetime
@@ -320,7 +326,8 @@ class EventReviewCreateRequest(BaseModel):
 class EventReviewPublic(BaseModel):
     id: str
     event_id: str
-    full_name: str
+    first_name: str
+    last_name: str
     rating: int
     comment: str
     created_at: datetime

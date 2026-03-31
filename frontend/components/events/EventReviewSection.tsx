@@ -196,7 +196,7 @@ export default function EventReviewSection({ eventId, eventLifecycle }: EventRev
             reviews.map((review) => (
               <article key={review.id} className="event-review-item">
                 <div className="event-review-item-head">
-                  <strong>{review.full_name}</strong>
+                  <strong>{`${review.first_name} ${review.last_name}`.trim()}</strong>
                   {renderStars(review.rating)}
                 </div>
                 <p>{review.comment}</p>

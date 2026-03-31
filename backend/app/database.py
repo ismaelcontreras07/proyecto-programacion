@@ -54,6 +54,296 @@ def _table_has_column(connection: sqlite3.Connection, table_name: str, column_na
     return any(row["name"] == column_name for row in rows)
 
 
+def _table_exists(connection: sqlite3.Connection, table_name: str) -> bool:
+    row = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ? LIMIT 1",
+        (table_name,),
+    ).fetchone()
+    return row is not None
+
+
+def _split_full_name(full_name: str | None) -> tuple[str, str]:
+    normalized = " ".join((full_name or "").strip().split())
+    if not normalized:
+        return "Sin nombre", "Sin apellido"
+
+    parts = normalized.split(" ", 1)
+    if len(parts) == 1:
+        return parts[0], parts[0]
+    return parts[0], parts[1]
+
+
+def _migrate_users_name_columns(connection: sqlite3.Connection) -> None:
+    legacy_table = "users_legacy_full_name"
+
+    if not _table_has_column(connection, "users", "full_name"):
+        if _table_exists(connection, legacy_table):
+            users_count = connection.execute("SELECT COUNT(*) AS total FROM users").fetchone()["total"]
+            if users_count == 0:
+                rows = connection.execute(f"SELECT * FROM {legacy_table}").fetchall()
+                for row in rows:
+                    first_name, last_name = _split_full_name(row["full_name"])
+                    connection.execute(
+                        """
+                        INSERT INTO users (
+                            id, username, first_name, last_name, student_id, career, semester,
+                            role, password_hash, is_active, created_at, updated_at
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            row["id"],
+                            row["username"],
+                            first_name,
+                            last_name,
+                            row["student_id"],
+                            row["career"],
+                            row["semester"],
+                            row["role"],
+                            row["password_hash"],
+                            row["is_active"],
+                            row["created_at"],
+                            row["updated_at"],
+                        ),
+                    )
+            connection.execute(f"DROP TABLE {legacy_table}")
+            connection.execute("CREATE INDEX IF NOT EXISTS idx_users_student_id ON users(student_id)")
+        return
+
+    rows = connection.execute("SELECT * FROM users").fetchall()
+    connection.execute(f"ALTER TABLE users RENAME TO {legacy_table}")
+    connection.executescript(
+        """
+        CREATE TABLE users (
+            id TEXT PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            first_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
+            student_id TEXT NOT NULL UNIQUE,
+            career TEXT,
+            semester INTEGER CHECK (semester BETWEEN 1 AND 12),
+            role TEXT NOT NULL CHECK (role IN ('admin', 'user')),
+            password_hash TEXT NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    for row in rows:
+        first_name, last_name = _split_full_name(row["full_name"])
+        connection.execute(
+            """
+            INSERT INTO users (
+                id, username, first_name, last_name, student_id, career, semester,
+                role, password_hash, is_active, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                row["id"],
+                row["username"],
+                first_name,
+                last_name,
+                row["student_id"],
+                row["career"],
+                row["semester"],
+                row["role"],
+                row["password_hash"],
+                row["is_active"],
+                row["created_at"],
+                row["updated_at"],
+            ),
+        )
+
+    connection.execute(f"DROP TABLE {legacy_table}")
+    connection.execute("CREATE INDEX IF NOT EXISTS idx_users_student_id ON users(student_id)")
+
+
+def _migrate_event_registrations_name_columns(connection: sqlite3.Connection) -> None:
+    table_exists = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'event_registrations' LIMIT 1"
+    ).fetchone()
+    if not table_exists:
+        return
+
+    legacy_table = "event_registrations_legacy_full_name"
+    if not _table_has_column(connection, "event_registrations", "full_name"):
+        if _table_exists(connection, legacy_table):
+            rows = connection.execute(f"SELECT * FROM {legacy_table}").fetchall()
+            records_count = connection.execute(
+                "SELECT COUNT(*) AS total FROM event_registrations"
+            ).fetchone()["total"]
+            if records_count == 0:
+                for row in rows:
+                    first_name, last_name = _split_full_name(row["full_name"])
+                    connection.execute(
+                        """
+                        INSERT INTO event_registrations (
+                            id, event_id, first_name, last_name, student_id, career, semester,
+                            status, created_at, updated_at
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            row["id"],
+                            row["event_id"],
+                            first_name,
+                            last_name,
+                            row["student_id"],
+                            row["career"],
+                            row["semester"],
+                            row["status"],
+                            row["created_at"],
+                            row["updated_at"],
+                        ),
+                    )
+            connection.execute(f"DROP TABLE {legacy_table}")
+            connection.execute("CREATE INDEX IF NOT EXISTS idx_registrations_event_id ON event_registrations(event_id)")
+            connection.execute("CREATE INDEX IF NOT EXISTS idx_registrations_status ON event_registrations(status)")
+            connection.execute("CREATE INDEX IF NOT EXISTS idx_registrations_created_at ON event_registrations(created_at)")
+        return
+
+    rows = connection.execute("SELECT * FROM event_registrations").fetchall()
+    connection.execute(f"ALTER TABLE event_registrations RENAME TO {legacy_table}")
+    connection.executescript(
+        """
+        CREATE TABLE event_registrations (
+            id TEXT PRIMARY KEY,
+            event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+            first_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
+            student_id TEXT NOT NULL,
+            career TEXT NOT NULL,
+            semester INTEGER NOT NULL CHECK (semester BETWEEN 1 AND 12),
+            status TEXT NOT NULL CHECK (status IN ('registered', 'cancelled')),
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (event_id, student_id)
+        );
+        """
+    )
+
+    for row in rows:
+        first_name, last_name = _split_full_name(row["full_name"])
+        connection.execute(
+            """
+            INSERT INTO event_registrations (
+                id, event_id, first_name, last_name, student_id, career, semester,
+                status, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                row["id"],
+                row["event_id"],
+                first_name,
+                last_name,
+                row["student_id"],
+                row["career"],
+                row["semester"],
+                row["status"],
+                row["created_at"],
+                row["updated_at"],
+            ),
+        )
+
+    connection.execute(f"DROP TABLE {legacy_table}")
+    connection.execute("CREATE INDEX IF NOT EXISTS idx_registrations_event_id ON event_registrations(event_id)")
+    connection.execute("CREATE INDEX IF NOT EXISTS idx_registrations_status ON event_registrations(status)")
+    connection.execute("CREATE INDEX IF NOT EXISTS idx_registrations_created_at ON event_registrations(created_at)")
+
+
+def _migrate_event_reviews_name_columns(connection: sqlite3.Connection) -> None:
+    table_exists = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'event_reviews' LIMIT 1"
+    ).fetchone()
+    if not table_exists:
+        return
+
+    legacy_table = "event_reviews_legacy_full_name"
+    if not _table_has_column(connection, "event_reviews", "full_name"):
+        if _table_exists(connection, legacy_table):
+            rows = connection.execute(f"SELECT * FROM {legacy_table}").fetchall()
+            reviews_count = connection.execute("SELECT COUNT(*) AS total FROM event_reviews").fetchone()["total"]
+            if reviews_count == 0:
+                for row in rows:
+                    first_name, last_name = _split_full_name(row["full_name"])
+                    connection.execute(
+                        """
+                        INSERT INTO event_reviews (
+                            id, event_id, student_id, first_name, last_name, rating, comment,
+                            created_at, updated_at
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            row["id"],
+                            row["event_id"],
+                            row["student_id"],
+                            first_name,
+                            last_name,
+                            row["rating"],
+                            row["comment"],
+                            row["created_at"],
+                            row["updated_at"],
+                        ),
+                    )
+            connection.execute(f"DROP TABLE {legacy_table}")
+            connection.execute("CREATE INDEX IF NOT EXISTS idx_event_reviews_event_id ON event_reviews(event_id)")
+            connection.execute("CREATE INDEX IF NOT EXISTS idx_event_reviews_student_id ON event_reviews(student_id)")
+            connection.execute("CREATE INDEX IF NOT EXISTS idx_event_reviews_rating ON event_reviews(rating)")
+        return
+
+    rows = connection.execute("SELECT * FROM event_reviews").fetchall()
+    connection.execute(f"ALTER TABLE event_reviews RENAME TO {legacy_table}")
+    connection.executescript(
+        """
+        CREATE TABLE event_reviews (
+            id TEXT PRIMARY KEY,
+            event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+            student_id TEXT NOT NULL,
+            first_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
+            rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+            comment TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (event_id, student_id)
+        );
+        """
+    )
+
+    for row in rows:
+        first_name, last_name = _split_full_name(row["full_name"])
+        connection.execute(
+            """
+            INSERT INTO event_reviews (
+                id, event_id, student_id, first_name, last_name, rating, comment,
+                created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                row["id"],
+                row["event_id"],
+                row["student_id"],
+                first_name,
+                last_name,
+                row["rating"],
+                row["comment"],
+                row["created_at"],
+                row["updated_at"],
+            ),
+        )
+
+    connection.execute(f"DROP TABLE {legacy_table}")
+    connection.execute("CREATE INDEX IF NOT EXISTS idx_event_reviews_event_id ON event_reviews(event_id)")
+    connection.execute("CREATE INDEX IF NOT EXISTS idx_event_reviews_student_id ON event_reviews(student_id)")
+    connection.execute("CREATE INDEX IF NOT EXISTS idx_event_reviews_rating ON event_reviews(rating)")
+
+
 def _drop_all_tables(connection: sqlite3.Connection) -> None:
     connection.executescript(
         """
@@ -75,7 +365,8 @@ def _ensure_event_reviews_table(connection: sqlite3.Connection) -> None:
             id TEXT PRIMARY KEY,
             event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
             student_id TEXT NOT NULL,
-            full_name TEXT NOT NULL,
+            first_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
             rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
             comment TEXT NOT NULL,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -133,7 +424,12 @@ def initialize_database(db_path: Path | None = None) -> Path:
             connection.executescript(sqlite_schema)
             connection.commit()
         else:
-            # Backward-compatible migration for databases created before event reviews existed.
+            # Backward-compatible migrations:
+            # - legacy full_name -> first_name/last_name split
+            # - databases created before event reviews existed
+            _migrate_users_name_columns(connection)
+            _migrate_event_registrations_name_columns(connection)
+            _migrate_event_reviews_name_columns(connection)
             _ensure_event_reviews_table(connection)
             connection.commit()
     return target_path

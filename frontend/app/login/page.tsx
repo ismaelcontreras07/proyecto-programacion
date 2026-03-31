@@ -11,7 +11,8 @@ type LoginApiResponse = {
   user: {
     id: string;
     username: string;
-    full_name: string;
+    first_name: string;
+    last_name: string;
     role: "admin" | "user";
     student_id?: string | null;
     career?: string | null;
@@ -61,7 +62,8 @@ export default function LoginPage() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        full_name: payload.fullName,
+        first_name: payload.firstName,
+        last_name: payload.lastName,
         student_id: payload.studentId,
         password: payload.password,
         career: payload.career,

@@ -67,7 +67,7 @@ export default function PrivacyPage() {
                             </h2>
                             <p className="privacy-text">Podemos recopilar la siguiente información:</p>
                             <ul className="privacy-list">
-                                <li>Datos de cuenta y registro: nombre completo, matrícula, carrera y cuatrimestre.</li>
+                                <li>Datos de cuenta y registro: nombre, apellido, matrícula, carrera y cuatrimestre.</li>
                                 <li>Datos de uso y navegación dentro de la plataforma.</li>
                                 <li>Información técnica, como dirección IP, navegador y dispositivo.</li>
                             </ul>
