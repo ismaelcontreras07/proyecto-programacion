@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { motion } from "motion/react";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
+import { PencilLine, PlusCircle } from "lucide-react";
 import {
   createEvent,
   deleteEvent,
@@ -91,6 +95,7 @@ export default function AdminPage() {
   const [success, setSuccess] = useState("");
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [form, setForm] = useState<EventFormState>(DEFAULT_FORM);
+  const pageRef = useRef<HTMLElement | null>(null);
 
   const isEditing = useMemo(() => editingEventId !== null, [editingEventId]);
 
@@ -110,6 +115,18 @@ export default function AdminPage() {
   useEffect(() => {
     void loadEvents();
   }, []);
+
+  useGSAP(
+    () => {
+      if (!pageRef.current) return;
+      gsap.fromTo(
+        ".admin-panel",
+        { autoAlpha: 0, y: 16 },
+        { autoAlpha: 1, y: 0, duration: 0.42, stagger: 0.08, ease: "power2.out" },
+      );
+    },
+    { scope: pageRef, dependencies: [events.length, loading] },
+  );
 
   const resetForm = () => {
     setEditingEventId(null);
@@ -214,19 +231,27 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="admin-page">
+    <main className="admin-page" ref={pageRef}>
       <section className="admin-shell">
-        <header className="admin-header">
+        <motion.header
+          className="admin-header"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <h1>Gestión de eventos</h1>
-          <p>Solo administradores pueden crear, editar y eliminar eventos.</p>
-        </header>
+          <p>Panel exclusivo para crear, editar y eliminar eventos institucionales.</p>
+        </motion.header>
 
         {error && <div className="admin-alert admin-alert-error">{error}</div>}
         {success && <div className="admin-alert admin-alert-success">{success}</div>}
 
         <section className="admin-grid">
           <article className="admin-panel">
-            <h2>{isEditing ? "Editar evento" : "Nuevo evento"}</h2>
+            <h2>
+              {isEditing ? <PencilLine size={17} /> : <PlusCircle size={17} />}
+              {isEditing ? "Editar evento" : "Nuevo evento"}
+            </h2>
             <form className="admin-form" onSubmit={handleSubmit}>
               <label>
                 Nombre
@@ -249,11 +274,7 @@ export default function AdminPage() {
                   Formatos permitidos: JPG, PNG o WEBP. Tamaño máximo: 5 MB.
                 </span>
                 {uploadingImage && <span className="admin-field-help">Subiendo imagen...</span>}
-                {form.image && (
-                  <span className="admin-field-help">
-                    Imagen cargada: {form.image}
-                  </span>
-                )}
+                {form.image && <span className="admin-field-help">Imagen cargada: {form.image}</span>}
                 {form.image && (
                   <Image
                     src={resolveEventImageSrc(form.image)}
@@ -359,7 +380,13 @@ export default function AdminPage() {
               </label>
               <div className="admin-form-actions admin-form-full">
                 <button type="submit" disabled={submitting || uploadingImage}>
-                  {submitting ? "Guardando..." : uploadingImage ? "Subiendo imagen..." : isEditing ? "Actualizar evento" : "Crear evento"}
+                  {submitting
+                    ? "Guardando..."
+                    : uploadingImage
+                      ? "Subiendo imagen..."
+                      : isEditing
+                        ? "Actualizar evento"
+                        : "Crear evento"}
                 </button>
                 {isEditing && (
                   <button type="button" className="secondary" onClick={resetForm}>

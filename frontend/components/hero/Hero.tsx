@@ -1,219 +1,330 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
-import "./hero.css"
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion } from "motion/react";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ArrowRight, CalendarCheck2, Sparkles } from "lucide-react";
+import { fetchEventById, resolveEventImageSrc, type EventDetail } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
+import { formatEventDate, normalizeEventTimeLabel } from "../../lib/datetime";
+import "./hero.css";
+
+gsap.registerPlugin(ScrollTrigger);
 
 type HeroMetric = {
-    value: string
-    label: string
-}
+  value: string;
+  label: string;
+};
 
 type HeroContent = {
-    kicker: string
-    title: string
-    subtitle: string
-    track: string
-    pillars: [string, string, string]
-    metrics: [HeroMetric, HeroMetric, HeroMetric, HeroMetric]
+  kicker: string;
+  title: string;
+  subtitle: string;
+  supporting: string;
+  primaryCta: {
+    label: string;
+    href: string;
+  };
+  secondaryCta: {
+    label: string;
+    href: string;
+  };
+  metrics: HeroMetric[];
+};
+
+function getEventIdFromPath(pathname: string | null): string | null {
+  if (!pathname) return null;
+  const match = pathname.match(/^\/eventos\/([^/?#]+)/);
+  return match?.[1] ?? null;
+}
+
+function buildEventContent(event: EventDetail): HeroContent {
+  const availability = event.lifecycle === "past" ? "Finalizado" : `${Math.max(event.spots, 0)} cupos`;
+  return {
+    kicker: "Detalle del evento",
+    title: event.name,
+    subtitle: event.summary,
+    supporting: `${formatEventDate(event.date)} · ${normalizeEventTimeLabel(event.time)} · ${event.place}`,
+    primaryCta: {
+      label: "Ver mis eventos",
+      href: "/mis-eventos",
+    },
+    secondaryCta: {
+      label: "Volver a inicio",
+      href: "/",
+    },
+    metrics: [
+      { value: formatEventDate(event.date), label: "Fecha" },
+      { value: normalizeEventTimeLabel(event.time), label: "Horario" },
+      { value: event.type, label: "Modalidad" },
+      { value: availability, label: "Disponibilidad" },
+    ],
+  };
+}
+
+function resolveContent(pathname: string | null): HeroContent {
+  if (pathname === "/") {
+    return {
+      kicker: "UNIMEX Eventos",
+      title: "Formación universitaria conectada con oportunidades reales",
+      subtitle: "Regístrate a actividades académicas, organiza tu agenda y da seguimiento a tu participación.",
+      supporting: "Todo desde tu matrícula, con una experiencia clara y rápida.",
+      primaryCta: {
+        label: "Ver eventos activos",
+        href: "#eventos",
+      },
+      secondaryCta: {
+        label: "Acceder a mi cuenta",
+        href: "/login",
+      },
+      metrics: [
+        { value: "Activos", label: "Eventos disponibles" },
+        { value: "Pasados", label: "Con reseñas" },
+        { value: "1 cuenta", label: "Registro simplificado" },
+        { value: "Mi agenda", label: "Control personal" },
+      ],
+    };
+  }
+
+  if (pathname?.startsWith("/mis-eventos")) {
+    return {
+      kicker: "Mi actividad",
+      title: "Consulta y administra tus eventos registrados",
+      subtitle: "Visualiza tus eventos activos y pasados con estado actualizado al momento.",
+      supporting: "Cancela asistencia solo cuando el evento todavía no finaliza.",
+      primaryCta: {
+        label: "Explorar eventos",
+        href: "/#eventos",
+      },
+      secondaryCta: {
+        label: "Ir a inicio",
+        href: "/",
+      },
+      metrics: [
+        { value: "Activo/Pasado", label: "Estado del evento" },
+        { value: "Horario", label: "Sin traslapes" },
+        { value: "1 click", label: "Acciones rápidas" },
+        { value: "Reseñas", label: "Al finalizar" },
+      ],
+    };
+  }
+
+  return {
+    kicker: "Comunidad UNIMEX",
+    title: "Experiencia académica digital, moderna y enfocada en estudiantes",
+    subtitle: "Navegación consistente y datos claros para cada sección de la plataforma.",
+    supporting: "Diseño limpio, rápido y funcional para uso diario.",
+    primaryCta: {
+      label: "Ir al inicio",
+      href: "/",
+    },
+    secondaryCta: {
+      label: "Iniciar sesión",
+      href: "/login",
+    },
+    metrics: [
+      { value: "Eventos", label: "Información centralizada" },
+      { value: "Registro", label: "Con matrícula" },
+      { value: "Historial", label: "Siempre visible" },
+      { value: "Calificación", label: "Después del evento" },
+    ],
+  };
 }
 
 export default function Hero() {
-    const pathname = usePathname()
-    const defaultImageSrc = "/hero-campus-optimized.jpg"
-    const fallbackImageSrc = "/logo-unimex-horizontal.png"
-    const [heroImageSrc, setHeroImageSrc] = useState(defaultImageSrc)
-    const [didFallbackImage, setDidFallbackImage] = useState(false)
+  const heroRef = useRef<HTMLElement | null>(null);
+  const pathname = usePathname();
+  const { isAuthenticated, user } = useAuth();
 
-    useEffect(() => {
-        setHeroImageSrc(defaultImageSrc)
-        setDidFallbackImage(false)
-    }, [pathname])
+  const [eventHero, setEventHero] = useState<EventDetail | null>(null);
+  const [eventHeroLoading, setEventHeroLoading] = useState(false);
 
-    const getHeroContent = (): HeroContent => {
-        switch (pathname) {
-            case "/":
-                return {
-                    kicker: "Campus UNIMEX POLANCO",
-                    title: "Formacion Academica de Excelencia 🎓 ",
-                    subtitle: "Conecta con eventos formativos, talleres y experiencias que impulsan tu perfil universitario.",
-                    track: "Una plataforma institucional para aprender, participar y destacar.",
-                    pillars: ["Excelencia académica", "Innovación aplicada", "Vinculación profesional"],
-                    metrics: [
-                        { value: "+120", label: "Eventos por ciclo" },
-                        { value: "95%", label: "Satisfacción estudiantil" },
-                        { value: "+30", label: "Áreas de formación" },
-                        { value: "24/7", label: "Gestión digital" },
-                    ],
-                }
-            case "/privacidad":
-                return {
-                    kicker: "Cumplimiento institucional",
-                    title: "Privacidad y Protección de Datos",
-                    subtitle: "Gestionamos tu información con criterios de seguridad, transparencia y responsabilidad universitaria.",
-                    track: "Tus datos personales se tratan con enfoque normativo y trazabilidad.",
-                    pillars: ["Confidencialidad", "Consentimiento informado", "Control de acceso"],
-                    metrics: [
-                        { value: "100%", label: "Procesos auditables" },
-                        { value: "0", label: "Uso comercial de datos" },
-                        { value: "TLS", label: "Canales cifrados" },
-                        { value: "ISO", label: "Buenas prácticas" },
-                    ],
-                }
-            case "/admin":
-                return {
-                    kicker: "Gestión estratégica",
-                    title: "Panel Administrativo",
-                    subtitle: "Coordina la agenda institucional y opera la cartelera de eventos con precisión.",
-                    track: "Control centralizado para creación, edición y seguimiento académico.",
-                    pillars: ["Operación eficiente", "Control institucional", "Datos accionables"],
-                    metrics: [
-                        { value: "1", label: "Panel unificado" },
-                        { value: "CSV", label: "Reportes exportables" },
-                        { value: "Live", label: "Datos actualizados" },
-                        { value: "100%", label: "Control de roles" },
-                    ],
-                }
-            case "/dashboard":
-                return {
-                    kicker: "Analítica institucional",
-                    title: "Dashboard de Rendimiento",
-                    subtitle: "Visualiza registros, actividad estudiantil y desempeño de eventos en tiempo real.",
-                    track: "Indicadores clave para decisiones académicas basadas en evidencia.",
-                    pillars: ["Métricas claras", "Seguimiento continuo", "Visión ejecutiva"],
-                    metrics: [
-                        { value: "+1K", label: "Interacciones mensuales" },
-                        { value: "Top 5", label: "Eventos destacados" },
-                        { value: "Real-time", label: "Monitoreo activo" },
-                        { value: "360°", label: "Visibilidad operativa" },
-                    ],
-                }
-            case "/mis-eventos":
-                return {
-                    kicker: "Trayectoria personal",
-                    title: "Tus Eventos Registrados",
-                    subtitle: "Mantén control de tus actividades, horarios y participación académica desde un solo lugar.",
-                    track: "Tu historial de participación refleja tu crecimiento universitario.",
-                    pillars: ["Seguimiento puntual", "Organización académica", "Participación activa"],
-                    metrics: [
-                        { value: "100%", label: "Acceso inmediato" },
-                        { value: "24h", label: "Gestión continua" },
-                        { value: "Past/Active", label: "Estado de eventos" },
-                        { value: "1 click", label: "Consulta rápida" },
-                    ],
-                }
-            default:
-                if (pathname?.startsWith("/eventos")) {
-                    return {
-                        kicker: "Agenda UNIMEX",
-                        title: "Cartelera Académica",
-                        subtitle: "Descubre actividades formativas diseñadas para fortalecer competencias profesionales.",
-                        track: "Eventos con enfoque práctico y visión de futuro.",
-                        pillars: ["Formación integral", "Networking académico", "Experiencia aplicada"],
-                        metrics: [
-                            { value: "Activos", label: "Eventos vigentes" },
-                            { value: "Pasados", label: "Historial consultable" },
-                            { value: "5★", label: "Sistema de valoración" },
-                            { value: "Smart", label: "Filtros avanzados" },
-                        ],
-                    }
-                }
-                if (pathname?.startsWith("/admin")) {
-                    return {
-                        kicker: "Gestión interna",
-                        title: "Administración",
-                        subtitle: "Herramientas para mantener la agenda académica institucional siempre actualizada.",
-                        track: "Eficiencia operativa con control completo de publicaciones.",
-                        pillars: ["Control de contenido", "Coordinación central", "Flujo eficiente"],
-                        metrics: [
-                            { value: "1", label: "Sistema central" },
-                            { value: "Roles", label: "Acceso segmentado" },
-                            { value: "Cloud", label: "Operación en línea" },
-                            { value: "Secure", label: "Entorno protegido" },
-                        ],
-                    }
-                }
-                return {
-                    kicker: "Plataforma oficial",
-                    title: "Ecosistema Académico UNIMEX",
-                    subtitle: "Una experiencia digital moderna para impulsar aprendizaje, participación y proyección profesional.",
-                    track: "Diseñado para una comunidad universitaria dinámica y conectada.",
-                    pillars: ["Visión institucional", "Experiencia premium", "Crecimiento continuo"],
-                    metrics: [
-                        { value: "+120", label: "Eventos anuales" },
-                        { value: "360°", label: "Experiencia digital" },
-                        { value: "Live", label: "Actualización continua" },
-                        { value: "UNIMEX", label: "Sello académico" },
-                    ],
-                }
+  const eventId = useMemo(() => getEventIdFromPath(pathname), [pathname]);
+  const baseContent = useMemo(() => resolveContent(pathname), [pathname]);
+  const content = useMemo(() => {
+    if (eventHero) return buildEventContent(eventHero);
+    if (eventId && eventHeroLoading) {
+      return {
+        ...baseContent,
+        kicker: "Cargando evento",
+        title: "Preparando la información del evento",
+        subtitle: "Estamos cargando datos actualizados para mostrarte fecha, horario y disponibilidad.",
+      };
+    }
+    return baseContent;
+  }, [baseContent, eventHero, eventHeroLoading, eventId]);
+
+  const resolvedSecondaryCta = useMemo(() => {
+    if (!isAuthenticated) return content.secondaryCta;
+    if (user?.role === "admin") {
+      return { label: "Ir a dashboard", href: "/dashboard" };
+    }
+    return { label: "Ver mis eventos", href: "/mis-eventos" };
+  }, [content.secondaryCta, isAuthenticated, user?.role]);
+
+  const defaultImageSrc = "/hero-campus-optimized.jpg";
+  const fallbackImageSrc = "/logo-unimex-horizontal.png";
+  const [heroImageSrc, setHeroImageSrc] = useState(defaultImageSrc);
+  const [didFallbackImage, setDidFallbackImage] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadEventHero = async () => {
+      if (!eventId) {
+        setEventHero(null);
+        setEventHeroLoading(false);
+        return;
+      }
+
+      setEventHero(null);
+      setDidFallbackImage(false);
+      setHeroImageSrc(defaultImageSrc);
+      setEventHeroLoading(true);
+      try {
+        const detail = await fetchEventById(eventId);
+        if (!ignore && detail) {
+          setEventHero(detail);
+          setHeroImageSrc(resolveEventImageSrc(detail.image || defaultImageSrc));
         }
+      } catch {
+        if (!ignore) setEventHero(null);
+      } finally {
+        if (!ignore) setEventHeroLoading(false);
+      }
+    };
+
+    void loadEventHero();
+
+    if (!eventId) {
+      setHeroImageSrc(defaultImageSrc);
+      setDidFallbackImage(false);
     }
 
-    const content = getHeroContent()
-    const shouldPrioritizeImage = pathname === "/"
+    return () => {
+      ignore = true;
+    };
+  }, [eventId]);
 
-    const handleHeroImageError = () => {
-        if (didFallbackImage) return
-        setDidFallbackImage(true)
-        setHeroImageSrc(fallbackImageSrc)
-    }
+  useGSAP(
+    () => {
+      if (!heroRef.current) return;
 
-    return (
-        <div className="hero-container">
-            <div className="hero-background">
-                <img
-                    src={heroImageSrc}
-                    alt="Campus UNIMEX"
-                    className="hero-image"
-                    loading={shouldPrioritizeImage ? "eager" : "lazy"}
-                    fetchPriority={shouldPrioritizeImage ? "high" : "auto"}
-                    decoding="async"
-                    onError={handleHeroImageError}
-                />
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (prefersReducedMotion) return;
+
+      const mm = gsap.matchMedia();
+      mm.add("(min-width: 1024px)", () => {
+        gsap.to(".hero-media-image", {
+          yPercent: 4,
+          ease: "none",
+          scrollTrigger: {
+            trigger: heroRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.6,
+          },
+        });
+      });
+
+      return () => {
+        mm.revert();
+      };
+    },
+    { scope: heroRef, dependencies: [pathname] },
+  );
+
+  const handleHeroImageError = () => {
+    if (didFallbackImage) return;
+    setDidFallbackImage(true);
+    setHeroImageSrc(fallbackImageSrc);
+  };
+
+  return (
+    <section className="hero" ref={heroRef}>
+      <div className="hero-backdrop" aria-hidden="true">
+        <img
+          src={heroImageSrc}
+          alt="Hero UNIMEX"
+          className="hero-media-image"
+          loading={pathname === "/" ? "eager" : "lazy"}
+          fetchPriority={pathname === "/" ? "high" : "auto"}
+          decoding="async"
+          onError={handleHeroImageError}
+        />
+      </div>
+
+      <div className="hero-ambient" aria-hidden="true">
+        <span className="hero-ambient-shape hero-ambient-shape--a" />
+        <span className="hero-ambient-shape hero-ambient-shape--b" />
+      </div>
+
+      <div className="hero-overlay" aria-hidden="true" />
+
+      <div className="hero-shell">
+        <div className="hero-grid">
+          <motion.div
+            className="hero-copy"
+            key={`copy-${pathname}-${content.title}`}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.34, ease: "easeOut" }}
+          >
+            <p className="hero-kicker hero-animate-kicker">
+              <Sparkles size={14} />
+              {content.kicker}
+            </p>
+
+            <h1 className="hero-title hero-animate-title">{content.title}</h1>
+
+            <p className="hero-subtitle hero-animate-subtitle">{content.subtitle}</p>
+            <p className="hero-supporting hero-animate-supporting">{content.supporting}</p>
+
+            <div className="hero-actions hero-animate-actions">
+              <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.18 }}>
+                <Link href={content.primaryCta.href} className="hero-btn hero-btn-primary">
+                  <CalendarCheck2 size={16} />
+                  {content.primaryCta.label}
+                </Link>
+              </motion.div>
+
+              <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.18 }}>
+                <Link href={resolvedSecondaryCta.href} className="hero-btn hero-btn-secondary">
+                  {resolvedSecondaryCta.label}
+                  <ArrowRight size={16} />
+                </Link>
+              </motion.div>
             </div>
+          </motion.div>
 
-            <div className="hero-grid" />
-            <div className="hero-glow hero-glow-a" />
-            <div className="hero-glow hero-glow-b" />
-
-            <div className="hero-overlay">
-                <div className="hero-content-shell">
-                    <section className="hero-main">
-                    <p className="hero-kicker">{content.kicker}</p>
-                    <h1 className="hero-title">{content.title}</h1>
-                    <p className="hero-subtitle">{content.subtitle}</p>
-
-                    <p className="hero-track">{content.track}</p>
-
-                    <ul className="hero-pillars">
-                        {content.pillars.map((pillar) => (
-                            <li key={pillar} className="hero-pillar">
-                                <span className="hero-pillar-dot" />
-                                <span>{pillar}</span>
-                            </li>
-                        ))}
-                    </ul>
-                    </section>
-
-                    <aside className="hero-panel">
-                        <p className="hero-panel-kicker">Indicadores Académicos</p>
-                        <h2 className="hero-panel-title">Impacto Institucional</h2>
-
-                        <div className="hero-metrics">
-                            {content.metrics.map((metric, index) => (
-                                <article
-                                    key={`${metric.label}-${index}`}
-                                    className="hero-metric-card"
-                                    style={{ animationDelay: `${0.08 * index + 0.16}s` }}
-                                >
-                                    <p className="hero-metric-value">{metric.value}</p>
-                                    <p className="hero-metric-label">{metric.label}</p>
-                                </article>
-                            ))}
-                        </div>
-                    </aside>
-                </div>
+          <motion.aside
+            className="hero-metrics-panel"
+            key={`metrics-${pathname}-${content.metrics[0]?.value ?? "default"}`}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.34, ease: "easeOut", delay: 0.06 }}
+          >
+            <p className="hero-metrics-kicker">Indicadores para estudiantes</p>
+            <div className="hero-metrics-grid">
+              {content.metrics.map((metric) => (
+                <motion.article
+                  key={metric.label}
+                  className="hero-metric hero-animate-metric"
+                  whileHover={{ y: -3 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <p className="hero-metric-value">{metric.value}</p>
+                  <p className="hero-metric-label">{metric.label}</p>
+                </motion.article>
+              ))}
             </div>
+          </motion.aside>
         </div>
-    )
+      </div>
+    </section>
+  );
 }

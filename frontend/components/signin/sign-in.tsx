@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "motion/react";
 import { ArrowLeftIcon, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import "./signin.css";
 
@@ -147,7 +148,12 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   return (
     <div className="signin-page">
       <section className="signin-panel">
-        <div className="signin-card">
+        <motion.div
+          className="signin-card"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.42, ease: "easeOut" }}
+        >
           <Link href="/" className="signin-home-link">
             <ArrowLeftIcon size={16} />
             Volver a la página principal
@@ -362,11 +368,16 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             <ShieldCheck size={16} />
             Acceso protegido con matrícula y contraseña.
           </p>
-        </div>
+        </motion.div>
       </section>
 
       {heroImageSrc && (
-        <section className="signin-hero">
+        <motion.section
+          className="signin-hero"
+          initial={{ opacity: 0, x: 18 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.45, ease: "easeOut", delay: 0.1 }}
+        >
           <div className="signin-hero-image" style={{ backgroundImage: `url(${heroImageSrc})` }} />
           {testimonials.length > 0 && (
             <div className="signin-testimonial-row">
@@ -375,7 +386,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               ))}
             </div>
           )}
-        </section>
+        </motion.section>
       )}
     </div>
   );
